@@ -7,6 +7,10 @@
 *.obj
 *.elf
 
+# CMake
+build/
+.cache/
+
 # Linker output
 *.ilk
 *.map
@@ -29,6 +33,7 @@
 *.dylib
 
 # Executables
+ft_ping
 *.exe
 *.out
 *.app
