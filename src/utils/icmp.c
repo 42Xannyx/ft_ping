@@ -1,5 +1,7 @@
+#include "payload.h"
 #include <netinet/ip_icmp.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 /**
@@ -29,15 +31,36 @@ unsigned short createChecksum(void *b, int len) {
   return result;
 }
 
-const struct icmp *getIcmp() {
-  struct icmp *icmp = malloc(sizeof(struct icmp));
+static void createBody(uint8_t *payload, uint64_t size) {
+  printf("%llu\n", size);
+  if (size >= PAYLOAD_SIZE) {
+    fprintf(stderr,
+            "Size of payload too big; size. Should be under 56. Current size: "
+            "%lu\n",
+            (unsigned long)size);
+    exit(EXIT_FAILURE);
+  }
 
-  icmp->icmp_type = ICMP_ECHO;
-  icmp->icmp_code = 0;
-  icmp->icmp_hun.ih_idseq.icd_id = htons(1);
-  icmp->icmp_hun.ih_idseq.icd_seq = htons(1);
+  for (uint8_t i = 0; i < size; ++i) {
+    payload[i] = 0x08 + i;
+  }
+  payload[size] = '\0';
+}
 
-  icmp->icmp_cksum = createChecksum((uint8_t *)icmp, sizeof(struct icmp));
+static void createHeader(struct icmp *header) {
+  header->icmp_type = ICMP_ECHO;
+  header->icmp_code = 0;
+  header->icmp_hun.ih_idseq.icd_id = htons(1);
+  header->icmp_hun.ih_idseq.icd_seq = htons(1);
 
-  return icmp;
+  header->icmp_cksum = createChecksum((uint8_t *)header, sizeof(struct icmp));
+}
+
+const t_packet *initPacket() {
+  t_packet *packet = malloc(sizeof(t_packet));
+
+  createHeader(&packet->header);
+  createBody((uint8_t *)&packet->payload, sizeof(packet->payload) - 1);
+
+  return packet;
 }
