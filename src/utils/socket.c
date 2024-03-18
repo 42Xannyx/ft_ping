@@ -6,12 +6,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/_types/_fd_def.h>
 #include <sys/_types/_ssize_t.h>
 #include <sys/_types/_u_int8_t.h>
+#include <sys/errno.h>
 #include <sys/socket.h>
+#include <time.h>
 #include <unistd.h>
 
 #include "ft_ping.h"
+#include "payload.h"
 
 #define RECV_TIMEOUT 1
 
@@ -60,8 +64,8 @@ const struct sockaddr_in setSocket(const int32_t socket_fd,
 }
 
 void sendPing(int32_t socket_fd, const struct sockaddr_in address,
-              const struct icmp *icmp) {
-  ssize_t ret = sendto(socket_fd, icmp, sizeof(struct icmp), 0,
+              const t_packet *packet) {
+  ssize_t ret = sendto(socket_fd, packet, sizeof(t_packet), 0,
                        (struct sockaddr *)&address, sizeof(address));
   if (ret < 0) {
     perror("sendto() error");
@@ -69,13 +73,14 @@ void sendPing(int32_t socket_fd, const struct sockaddr_in address,
   }
 }
 
-ssize_t recvPing(uint8_t *buf, int32_t socket_fd, const struct sockaddr_in address) {
+const ssize_t recvPing(uint8_t *buf, int32_t socket_fd,
+                       const struct sockaddr_in address) {
   u_int32_t addr_len = sizeof(address);
-  ssize_t ret = recvfrom(socket_fd, buf, sizeof(buf), 0,
+  ssize_t ret = recvfrom(socket_fd, buf, sizeof(buf), MSG_DONTWAIT,
                          (struct sockaddr *)&address, &addr_len);
+
   if (ret < 0) {
-    perror("recvfrom() error");
-    exit(EXIT_FAILURE);
+    perror("request timeout");
   }
 
   return ret;

@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 /**
  *The one's complement operation is used in the checksum calculation to ensure
@@ -48,12 +49,21 @@ static void createBody(uint8_t *payload, uint64_t size) {
 }
 
 static void createHeader(struct icmp *header) {
+  int32_t id = getpid() & 0xffff;
+
   header->icmp_type = ICMP_ECHO;
   header->icmp_code = 0;
-  header->icmp_hun.ih_idseq.icd_id = htons(1);
-  header->icmp_hun.ih_idseq.icd_seq = htons(1);
+  header->icmp_hun.ih_idseq.icd_id = htons(id);
+  header->icmp_hun.ih_idseq.icd_seq = htons(id * 256);
 
-  header->icmp_cksum = createChecksum((uint8_t *)header, sizeof(struct icmp));
+  header->icmp_cksum = createChecksum((uint16_t *)header, sizeof(struct icmp));
+}
+
+void changePacket(t_packet *packet) {
+  uint16_t *id = &packet->header.icmp_hun.ih_idseq.icd_id;
+
+  *id = packet->header.icmp_hun.ih_idseq.icd_seq + 1;
+  *id = (packet->header.icmp_hun.ih_idseq.icd_seq + 1) * 256;
 }
 
 const t_packet *initPacket() {

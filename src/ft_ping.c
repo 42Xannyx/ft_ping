@@ -3,11 +3,13 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/_types/_fd_def.h>
 #include <sys/_types/_ssize_t.h>
 #include <sys/socket.h>
 #include <unistd.h>
 
 #include "ft_ping.h"
+#include "payload.h"
 
 #define PING_SLEEP_RATE 1000000
 
@@ -22,18 +24,21 @@ int32_t main(int argc, char *argv[]) {
     exit(EXIT_FAILURE);
   }
 
+  bool ping_loop = true;
   const int32_t socket_fd = createSocket();
   const struct sockaddr_in address = setSocket(socket_fd, argv[1]);
-  const struct icmp *icmp = getIcmp();
+  const char *ip_str = fetchHostname(argv[1], address);
 
-  bool ping_loop = true;
+  int result = inet_pton(AF_INET, ip_str, (void *)&address.sin_addr);
 
-  int result = inet_pton(AF_INET, argv[1], (void *)&address.sin_addr);
-  messageOnStart("8.8.8.8", 56);
+  const t_packet *packet = initPacket();
+  messageOnStart(ip_str, argv[1], sizeof(packet->payload));
+
   while (ping_loop) {
+    changePacket((t_packet *)packet);
     uint8_t *buf = malloc(1024 * sizeof(uint8_t));
 
-    sendPing(socket_fd, address, icmp);
+    sendPing(socket_fd, address, packet);
     ssize_t ret = recvPing(buf, socket_fd, address);
 
     formatMessage(buf, ret);
@@ -44,6 +49,6 @@ int32_t main(int argc, char *argv[]) {
 
   messageOnQuit();
   close(socket_fd);
-  free((struct icmp *)icmp);
+  free((t_packet *)packet);
   return EXIT_SUCCESS;
 }
