@@ -7,7 +7,7 @@
 #include <string.h>
 #include <sys/socket.h>
 
-const char *fetchHostname(const char *hostname, struct sockaddr_in address) {
+const char *fetchHostname(const char *hostname) {
   struct addrinfo hints, *result;
   char *ip_str = malloc(NI_MAXHOST);
 

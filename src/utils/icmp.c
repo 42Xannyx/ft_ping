@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 /**
@@ -15,7 +16,7 @@
  *complement of 1111 1111 is 0000 0000, a result of 0 indicates that the data
  *has likely not been altered during transmission.
  */
-unsigned short createChecksum(void *b, int len) {
+unsigned short createChecksum(void *b, int32_t len) {
   unsigned short *buf = b;
   unsigned int sum = 0;
   unsigned short result;
@@ -33,7 +34,6 @@ unsigned short createChecksum(void *b, int len) {
 }
 
 static void createBody(uint8_t *payload, uint64_t size) {
-  printf("%llu\n", size);
   if (size >= PAYLOAD_SIZE) {
     fprintf(stderr,
             "Size of payload too big; size. Should be under 56. Current size: "
@@ -45,32 +45,37 @@ static void createBody(uint8_t *payload, uint64_t size) {
   for (uint8_t i = 0; i < size; ++i) {
     payload[i] = 0x08 + i;
   }
+
   payload[size] = '\0';
 }
 
 static void createHeader(struct icmp *header) {
   int32_t id = getpid() & 0xffff;
 
+  memset(header, 0, sizeof(struct icmp));
+
   header->icmp_type = ICMP_ECHO;
   header->icmp_code = 0;
   header->icmp_hun.ih_idseq.icd_id = htons(id);
-  header->icmp_hun.ih_idseq.icd_seq = htons(id * 256);
-
-  header->icmp_cksum = createChecksum((uint16_t *)header, sizeof(struct icmp));
+  header->icmp_hun.ih_idseq.icd_seq = htons(0);
+  header->icmp_cksum = 0;
 }
 
 void changePacket(t_packet *packet) {
-  uint16_t *id = &packet->header.icmp_hun.ih_idseq.icd_id;
+  packet->header.icmp_hun.ih_idseq.icd_seq++;
 
-  *id = packet->header.icmp_hun.ih_idseq.icd_seq + 1;
-  *id = (packet->header.icmp_hun.ih_idseq.icd_seq + 1) * 256;
+  packet->header.icmp_cksum = 0;
+  packet->header.icmp_cksum = createChecksum((uint16_t *)packet, 64);
 }
 
-const t_packet *initPacket() {
+t_packet *initPacket() {
   t_packet *packet = malloc(sizeof(t_packet));
+
+  memset(packet, 0, sizeof(t_packet));
 
   createHeader(&packet->header);
   createBody((uint8_t *)&packet->payload, sizeof(packet->payload) - 1);
+  packet->header.icmp_cksum = createChecksum((uint16_t *)packet, 64);
 
   return packet;
 }

@@ -1,0 +1,21 @@
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+const struct sockaddr_in *setAddress(const char *inet_address) {
+  struct sockaddr_in *address = malloc(sizeof(struct sockaddr_in));
+
+  memset(address, 0, sizeof(struct sockaddr_in));
+  address->sin_family = AF_INET;
+  address->sin_addr.s_addr = inet_addr(inet_address);
+  address->sin_port = htons(0);
+
+  if (address->sin_addr.s_addr == INADDR_NONE) {
+    fprintf(stderr, "%s: Invalid address!\n", "setAddress");
+    exit(EXIT_FAILURE);
+  }
+
+  return address;
+}

@@ -1,17 +1,41 @@
 #include <arpa/inet.h>
 #include <netinet/ip_icmp.h>
+#include <signal.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/_types/_fd_def.h>
-#include <sys/_types/_ssize_t.h>
+#include <string.h>
 #include <sys/socket.h>
+#include <time.h>
 #include <unistd.h>
 
 #include "ft_ping.h"
 #include "payload.h"
 
 #define PING_SLEEP_RATE 1000000
+
+/**
+volatile Keyword
+
+The volatile keyword is used in variable declarations to tell the compiler that
+the value of the variable can change at any time, without any action being taken
+by the code the compiler finds nearby. What this means practically is that the
+compiler won't optimize away reads or writes to this variable, ensuring that the
+program always checks the current value of the variable at runtime instead of
+caching it in a register. This is particularly important for variables that may
+be changed by hardware, a different thread, or—in this case—a signal handler.
+sig_atomic_t Type
+
+The sig_atomic_t type is an integer type that can be accessed atomically,
+meaning that operations on this type of variable are completed in a single step.
+This property is crucial for signal handlers, as it guarantees that reading or
+writing to a sig_atomic_t variable can't be interrupted by a signal. This makes
+sig_atomic_t safe to use for communication between signal handlers and the main
+program, ensuring that data isn't corrupted by partial writes or reads.
+*/
+volatile sig_atomic_t g_ping_loop = true;
+
+void handle_signal(int32_t sig) { g_ping_loop = false; }
 
 int32_t main(int argc, char *argv[]) {
   if (argc <= 1) {
@@ -21,34 +45,70 @@ int32_t main(int argc, char *argv[]) {
 
   if (getuid() != 0) {
     fprintf(stderr, "%s: This program requires root privileges!\n", argv[0]);
-    exit(EXIT_FAILURE);
+    return EXIT_FAILURE;
   }
 
-  bool ping_loop = true;
+  signal(SIGINT, handle_signal);
+
+  t_stats stats;
+  struct timespec time = {0, 0}, t_start = {0, 0}, t_end = {0, 0};
+
+  memset(&stats, 0, sizeof(t_stats));
+
   const int32_t socket_fd = createSocket();
-  const struct sockaddr_in address = setSocket(socket_fd, argv[1]);
-  const char *ip_str = fetchHostname(argv[1], address);
+  setSocket(socket_fd, argv[1]);
+  const char *ip_str = fetchHostname(argv[1]);
 
-  int result = inet_pton(AF_INET, ip_str, (void *)&address.sin_addr);
+  const struct sockaddr_in *address = setAddress(ip_str);
+  int32_t result = inet_pton(AF_INET, ip_str, (void *)&address->sin_addr);
 
-  const t_packet *packet = initPacket();
+  t_packet *packet = initPacket();
   messageOnStart(ip_str, argv[1], sizeof(packet->payload));
 
-  while (ping_loop) {
-    changePacket((t_packet *)packet);
-    uint8_t *buf = malloc(1024 * sizeof(uint8_t));
+  while (g_ping_loop) {
+    uint8_t buf[84]; // ICMP Payload (64 Bytes) + IP Header (20 Bytes)
 
-    sendPing(socket_fd, address, packet);
-    ssize_t ret = recvPing(buf, socket_fd, address);
+    sendPing(socket_fd, *address, packet, sizeof(*packet));
+    while (clock_gettime(CLOCK_MONOTONIC, &t_start) < 0) {
+    }
 
-    formatMessage(buf, ret);
+    ssize_t ret = recvPing(buf, sizeof(buf), socket_fd, *address);
+    while (clock_gettime(CLOCK_MONOTONIC, &t_end) < 0) {
+    }
 
+    if (ret >= 0) {
+      stats.received_packages = stats.received_packages + 1;
+    }
+
+    if ((t_end.tv_nsec - t_start.tv_nsec) < 0) {
+      time.tv_sec = t_end.tv_sec - t_start.tv_sec - 1;
+      time.tv_nsec = 1000000000 + t_end.tv_nsec - t_start.tv_nsec;
+    } else {
+      time.tv_sec = t_end.tv_sec - t_start.tv_sec;
+      time.tv_nsec = t_end.tv_nsec - t_start.tv_nsec;
+    }
+
+    if (packet->header.icmp_hun.ih_idseq.icd_seq == 0) {
+      stats.min = time;
+    }
+
+    if (stats.max.tv_sec + stats.max.tv_nsec < time.tv_sec + time.tv_nsec) {
+      stats.max = time;
+    }
+    if (stats.min.tv_sec + stats.min.tv_nsec > time.tv_sec + time.tv_nsec) {
+      stats.min = time;
+    }
+
+    formatMessage(buf, ret, time);
+
+    changePacket(packet);
     usleep(PING_SLEEP_RATE);
-    free(buf);
   }
 
-  messageOnQuit();
+  stats.total_packages = packet->header.icmp_hun.ih_idseq.icd_seq;
+
+  messageOnQuit(argv[1], stats);
   close(socket_fd);
-  free((t_packet *)packet);
+  free(packet);
   return EXIT_SUCCESS;
 }

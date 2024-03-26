@@ -9,7 +9,9 @@
 
 /* ************** */
 
-// A total of 64 Bytes
+/*
+ * @summary: A total of 64 Bytes
+ * */
 typedef struct packet {
   struct icmp header;
   uint8_t payload[PAYLOAD_SIZE];
