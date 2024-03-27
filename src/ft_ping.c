@@ -1,4 +1,5 @@
 #include <arpa/inet.h>
+#include <math.h>
 #include <netinet/ip_icmp.h>
 #include <signal.h>
 #include <stdint.h>
@@ -6,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -36,6 +38,25 @@ program, ensuring that data isn't corrupted by partial writes or reads.
 volatile sig_atomic_t g_ping_loop = true;
 
 void handle_signal(int32_t sig) { g_ping_loop = false; }
+
+void updateStats(t_stats *stats, struct timespec new) {
+  double newMs = timespecToMs(new);
+
+  stats->received_packages++;
+  stats->sum += newMs;
+  stats->sumSquared += newMs * newMs;
+
+  double avgMs = stats->sum / stats->received_packages;
+  double meanSq = avgMs * avgMs;
+  double sqMean = stats->sumSquared / stats->received_packages;
+  double stddevMs = sqrt(sqMean - meanSq);
+
+  stats->avg.tv_sec = avgMs / 1000;
+  stats->avg.tv_nsec = (uint64_t)(avgMs * 1000000) % 1000000000;
+
+  stats->stddev.tv_sec = stddevMs / 1000;
+  stats->stddev.tv_nsec = (uint64_t)(stddevMs * 1000000) % 1000000000;
+}
 
 int32_t main(int argc, char *argv[]) {
   if (argc <= 1) {
@@ -76,10 +97,6 @@ int32_t main(int argc, char *argv[]) {
     while (clock_gettime(CLOCK_MONOTONIC, &t_end) < 0) {
     }
 
-    if (ret >= 0) {
-      stats.received_packages = stats.received_packages + 1;
-    }
-
     if ((t_end.tv_nsec - t_start.tv_nsec) < 0) {
       time.tv_sec = t_end.tv_sec - t_start.tv_sec - 1;
       time.tv_nsec = 1000000000 + t_end.tv_nsec - t_start.tv_nsec;
@@ -99,16 +116,22 @@ int32_t main(int argc, char *argv[]) {
       stats.min = time;
     }
 
+    if (ret >= 0) {
+      updateStats(&stats, time);
+    }
+
+    accumulate(&stats.total_rtt, time);
     formatMessage(buf, ret, time);
 
     changePacket(packet);
-    usleep(PING_SLEEP_RATE);
+    (void)usleep(PING_SLEEP_RATE);
   }
 
   stats.total_packages = packet->header.icmp_hun.ih_idseq.icd_seq;
+  calculateAverage(&stats);
 
   messageOnQuit(argv[1], stats);
-  close(socket_fd);
+  (void)close(socket_fd);
   free(packet);
   return EXIT_SUCCESS;
 }

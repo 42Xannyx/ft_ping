@@ -49,14 +49,21 @@ void messageOnStart(const char *ip_str, const char *input,
 }
 
 void messageOnQuit(const char *input, const t_stats stats) {
+  double minMs = timespecToMs(stats.min);
+  double avgMs = timespecToMs(stats.avg);
+  double maxMs = timespecToMs(stats.max);
+  double stddevMs = timespecToMs(stats.stddev);
+
   printf("--- %s ping statistics ---\n", input);
   printf("%hu packets transmitted, ", stats.total_packages);
   printf("%hu packets received, ", stats.received_packages);
-  printf("%hu %% packet loss\n",
-         100 - (stats.received_packages / stats.total_packages) * 100);
-  printf("round - trip min / avg / max / stddev = ");
-  printf("%ld.%03ld / %ld.%03ld / %ld.%03ld / %ld.%03ld ms", stats.min.tv_nsec,
-         stats.min.tv_nsec, stats.avg.tv_nsec, stats.avg.tv_nsec,
-         stats.max.tv_nsec, stats.max.tv_nsec, stats.stddev.tv_nsec,
-         stats.stddev.tv_nsec);
+  double packet_loss =
+      stats.total_packages > 0
+          ? 100.0 * (stats.total_packages - stats.received_packages) /
+                stats.total_packages
+          : 0.0;
+  printf("%.1f%% packet loss\n", packet_loss);
+
+  printf("round-trip min/avg/max/stddev = %.3f/%.3f/%.3f/%.3f ms\n", minMs,
+         avgMs, maxMs, stddevMs);
 }

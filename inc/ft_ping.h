@@ -12,10 +12,10 @@ typedef struct stats {
   n_short total_packages;
   n_short received_packages;
 
-  struct timespec min;
-  struct timespec avg;
-  struct timespec max;
-  struct timespec stddev;
+  double sum, sumSquared;
+
+  struct timespec total_rtt;
+  struct timespec min, max, avg, stddev;
 } t_stats;
 
 // socket.c
@@ -45,5 +45,8 @@ const char *fetchHostname(const char *);
 
 // time.c
 const struct timespec setTime(const int32_t, const int32_t);
+void calculateAverage(t_stats *stats);
+void accumulate(struct timespec *total, struct timespec new);
+double timespecToMs(struct timespec t);
 
 #endif // FT_PING_H
