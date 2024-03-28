@@ -10,10 +10,11 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "flags.h"
 #include "ft_ping.h"
 #include "payload.h"
 
-#define PING_SLEEP_RATE 1000000
+#define PING_SLEEP_RATE 1000000 // 1 second
 
 /**
 volatile Keyword
@@ -71,20 +72,23 @@ int32_t main(int32_t argc, char *argv[]) {
 
   (void)signal(SIGINT, handle_signal);
 
+  const t_flags *flags = initFlags(argv);
+  const char *ip = argv[argc - 1];
+
   t_stats stats;
   t_timespec time = {0, 0}, t_start = {0, 0}, t_end = {0, 0};
 
   (void)memset(&stats, 0, sizeof(t_stats));
 
   const int32_t socket_fd = createSocket();
-  setSocket(socket_fd, argv[1]);
-  const char *ip_str = fetchHostname(argv[1]);
+  setSocket(socket_fd, ip);
+  const char *ip_str = fetchHostname(ip);
 
   const t_sockaddr_in *address = setAddress(ip_str);
   int32_t result = inet_pton(AF_INET, ip_str, (void *)&address->sin_addr);
 
   t_packet *packet = initPacket();
-  messageOnStart(ip_str, argv[1], sizeof(packet->payload));
+  messageOnStart(ip_str, ip, sizeof(packet->payload));
 
   while (g_ping_loop) {
     char buf[84]; // ICMP Payload (64 Bytes) + IP Header (20 Bytes)
@@ -128,7 +132,7 @@ int32_t main(int32_t argc, char *argv[]) {
   stats.total_packages = packet->header.icmp_hun.ih_idseq.icd_seq;
   calculateAverage(&stats);
 
-  messageOnQuit(argv[1], stats);
+  messageOnQuit(ip, stats);
   (void)close(socket_fd);
   free(packet);
   free((char *)ip_str);
