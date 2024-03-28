@@ -16,6 +16,9 @@ const t_timespec setTime(const int32_t sec, const int32_t nsec) {
   return tv;
 }
 
+/**
+ * CLOCK_MONOTONIC meaning EPOCH Time
+ */
 void getClock(t_timespec *tv) {
   int32_t i = 0;
 
@@ -27,8 +30,7 @@ void getClock(t_timespec *tv) {
   }
 
   if (i == 3) {
-    fprintf(stderr, "Failed to get monotonic clock time after %d attempts.\n",
-            3);
+    fprintf(stderr, "Failed to get monotonic clock time after 3 attempts.\n");
     exit(EXIT_FAILURE);
   }
 }
