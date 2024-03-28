@@ -16,11 +16,11 @@ const t_timespec setTime(const int32_t sec, const int32_t nsec) {
   return tv;
 }
 
-void getClock(t_timespec tv) {
+void getClock(t_timespec *tv) {
   int32_t i = 0;
 
   while (i < 3) {
-    if (clock_gettime(CLOCK_MONOTONIC, &tv) == 0) {
+    if (clock_gettime(CLOCK_MONOTONIC, tv) == 0) {
       break;
     }
     i++;

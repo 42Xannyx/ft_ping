@@ -49,7 +49,7 @@ const char *fetchHostname(const char *);
 // time.c
 const t_timespec setTime(const int32_t, const int32_t);
 const t_timespec setDuration(t_timespec t_start, t_timespec t_end);
-void getClock(t_timespec tv);
+void getClock(t_timespec *tv);
 void calculateAverage(t_stats *stats);
 void accumulate(struct timespec *total, t_timespec new);
 double timespecToMs(struct timespec t);

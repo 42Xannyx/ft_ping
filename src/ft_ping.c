@@ -8,7 +8,6 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/types.h>
-#include <time.h>
 #include <unistd.h>
 
 #include "ft_ping.h"
@@ -80,51 +79,49 @@ int32_t main(int argc, char *argv[]) {
   setSocket(socket_fd, argv[1]);
   const char *ip_str = fetchHostname(argv[1]);
 
-  const struct sockaddr_in *address = setAddress(ip_str);
+  const t_sockaddr_in *address = setAddress(ip_str);
   int32_t result = inet_pton(AF_INET, ip_str, (void *)&address->sin_addr);
 
   t_packet *packet = initPacket();
   messageOnStart(ip_str, argv[1], sizeof(packet->payload));
 
   while (g_ping_loop) {
-    uint8_t buf[84]; // ICMP Payload (64 Bytes) + IP Header (20 Bytes)
+    char buf[84]; // ICMP Payload (64 Bytes) + IP Header (20 Bytes)
 
-    sendPing(socket_fd, *address, packet, sizeof(*packet));
-    while (clock_gettime(CLOCK_MONOTONIC, &t_start) < 0) {
-    }
+    ssize_t ret = sendPing(socket_fd, *address, packet, sizeof(*packet));
+    getClock(&t_start);
 
-    ssize_t ret = recvPing(buf, sizeof(buf), socket_fd, *address);
-    while (clock_gettime(CLOCK_MONOTONIC, &t_end) < 0) {
-    }
+    ret = recvPing(buf, sizeof(buf), socket_fd, *address);
+    getClock(&t_end);
 
-    if ((t_end.tv_nsec - t_start.tv_nsec) < 0) {
-      time.tv_sec = t_end.tv_sec - t_start.tv_sec - 1;
-      time.tv_nsec = 1000000000 + t_end.tv_nsec - t_start.tv_nsec;
-    } else {
-      time.tv_sec = t_end.tv_sec - t_start.tv_sec;
-      time.tv_nsec = t_end.tv_nsec - t_start.tv_nsec;
-    }
-
-    if (packet->header.icmp_hun.ih_idseq.icd_seq == 0) {
-      stats.min = time;
-    }
-
-    if (stats.max.tv_sec + stats.max.tv_nsec < time.tv_sec + time.tv_nsec) {
-      stats.max = time;
-    }
-    if (stats.min.tv_sec + stats.min.tv_nsec > time.tv_sec + time.tv_nsec) {
-      stats.min = time;
+    if (ret < 0) {
+      printf("request timeout for icmp_req=%d\n",
+             packet->header.icmp_hun.ih_idseq.icd_seq);
     }
 
     if (ret >= 0) {
+      time = setDuration(t_start, t_end);
+
+      if (packet->header.icmp_hun.ih_idseq.icd_seq == 0) {
+        stats.min = time;
+      }
+
+      if (stats.max.tv_sec + stats.max.tv_nsec < time.tv_sec + time.tv_nsec) {
+        stats.max = time;
+      }
+      if (stats.min.tv_sec + stats.min.tv_nsec > time.tv_sec + time.tv_nsec) {
+        stats.min = time;
+      }
+
+      accumulate(&stats.total_rtt, time);
       updateStats(&stats, time);
+
+      formatMessage(buf, ret, time);
+
+      (void)usleep(PING_SLEEP_RATE);
     }
 
-    accumulate(&stats.total_rtt, time);
-    formatMessage(buf, ret, time);
-
     changePacket(packet);
-    (void)usleep(PING_SLEEP_RATE);
   }
 
   stats.total_packages = packet->header.icmp_hun.ih_idseq.icd_seq;
