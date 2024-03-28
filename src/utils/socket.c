@@ -9,6 +9,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+#include "flags.h"
 #include "ft_ping.h"
 #include "payload.h"
 
@@ -66,6 +67,11 @@ const ssize_t recvPing(char *buf, size_t n, int32_t socket_fd,
   socklen_t addr_len = sizeof(t_sockaddr_in);
   ssize_t ret =
       recvfrom(socket_fd, buf, n, 0, (struct sockaddr *)&address, &addr_len);
+
+  if (errno != EAGAIN && errno != EWOULDBLOCK && ret < 0) {
+    perror("recvfrom() error");
+    exit(EXIT_FAILURE);
+  }
 
   return ret;
 }

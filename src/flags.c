@@ -3,29 +3,23 @@
 #include <string.h>
 
 #include "flags.h"
+#include "ft_ping.h"
 
-void handleVerbose(t_flags *flags) {
-  if (flags->verbose == false) {
-    (void)printf("Verbose is on\n");
-  }
-  flags->verbose = true;
-}
+void handleVerbose(t_flags *flags) { flags->verbose = true; }
 
 void handleVersion(t_flags *flags) {
   (void)printf("ft_ping from 42Xannyx 20240328\n");
   exit(EXIT_SUCCESS);
 }
 
-void handleFlood(t_flags *flags) {
-  if (flags->flood == false) {
-    (void)printf("Flood is on\n");
-  }
-}
+void handleFlood(t_flags *flags) { flags->flood = true; }
 
 void handlePreload(t_flags *flags) {
   if (flags->preload == false) {
     (void)printf("Preload is on\n");
   }
+
+  flags->preload = true;
 }
 
 static void findFlag(t_flags *flags, char *arg) {
@@ -51,7 +45,7 @@ static void findFlag(t_flags *flags, char *arg) {
   }
 }
 
-const t_flags *initFlags(char *argv[]) {
+t_flags *initFlags(char *argv[]) {
   t_flags *flags = malloc(sizeof(t_flags));
 
   memset(flags, false, sizeof(&flags));

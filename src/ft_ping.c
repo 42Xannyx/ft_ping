@@ -14,28 +14,7 @@
 #include "ft_ping.h"
 #include "payload.h"
 
-#define PING_SLEEP_RATE 1000000 // 1 second
-
-/**
-volatile Keyword
-
-The volatile keyword is used in variable declarations to tell the compiler that
-the value of the variable can change at any time, without any action being taken
-by the code the compiler finds nearby. What this means practically is that the
-compiler won't optimize away reads or writes to this variable, ensuring that the
-program always checks the current value of the variable at runtime instead of
-caching it in a register. This is particularly important for variables that may
-be changed by hardware, a different thread, or—in this case—a signal handler.
-sig_atomic_t Type
-
-The sig_atomic_t type is an integer type that can be accessed atomically,
-meaning that operations on this type of variable are completed in a single step.
-This property is crucial for signal handlers, as it guarantees that reading or
-writing to a sig_atomic_t variable can't be interrupted by a signal. This makes
-sig_atomic_t safe to use for communication between signal handlers and the main
-program, ensuring that data isn't corrupted by partial writes or reads.
-*/
-volatile sig_atomic_t g_ping_loop = true; // Only being used in main.c
+volatile sig_atomic_t g_ping_loop = true; // Signal use only!
 
 void handle_signal(int32_t sig) { g_ping_loop = false; }
 
@@ -72,7 +51,12 @@ int32_t main(int32_t argc, char *argv[]) {
 
   (void)signal(SIGINT, handle_signal);
 
-  const t_flags *flags = initFlags(argv);
+  t_flags *flags = NULL;
+
+  if (BONUS) {
+    flags = initFlags(argv);
+  }
+
   const char *ip = argv[argc - 1];
 
   t_stats stats;
@@ -137,6 +121,10 @@ int32_t main(int32_t argc, char *argv[]) {
   free(packet);
   free((char *)ip_str);
   free((t_sockaddr_in *)address);
+
+  if (BONUS) {
+    free(flags);
+  }
 
   return EXIT_SUCCESS;
 }

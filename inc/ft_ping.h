@@ -1,13 +1,20 @@
 #ifndef FT_PING_H
 #define FT_PING_H
 
+#include "flags.h"
 #include "payload.h"
 #include <netinet/in.h>
 #include <netinet/in_systm.h>
 #include <netinet/ip_icmp.h>
+#include <signal.h>
 #include <stdint.h>
-#include <stdlib.h>
 #include <time.h>
+
+#define PING_SLEEP_RATE 1000000 // 1 second
+
+#ifndef BONUS
+#define BONUS 0
+#endif
 
 typedef struct timespec t_timespec;
 typedef struct sockaddr_in t_sockaddr_in;

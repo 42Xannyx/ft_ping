@@ -47,6 +47,6 @@ void handlePreload(t_flags *flags);
 void handleVerbose(t_flags *flags);
 void handleVersion(t_flags *flags);
 
-const t_flags *initFlags(char *argv[]);
+t_flags *initFlags(char *argv[]);
 
 #endif // !FLAGS_H

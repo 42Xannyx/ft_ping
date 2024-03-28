@@ -16,6 +16,11 @@ else()
     target_compile_options(${PROJECT_NAME} PRIVATE -Ofast)
 endif()
 
+if(BONUS)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE BONUS=1)
+    message(STATUS "Bonus part enabled")
+endif()
+
 
 add_custom_target(fclean COMMAND ${CMAKE_COMMAND} -P CMakeFiles/${PROJECT_NAME}.dir/cmake_clean.cmake
                   COMMAND ${CMAKE_COMMAND} -E remove ${PROJECT_NAME})
