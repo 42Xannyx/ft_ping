@@ -8,45 +8,50 @@
 #include <stdint.h>
 #include <time.h>
 
+typedef struct timespec t_timespec;
+typedef struct sockaddr_in t_sockaddr_in;
+typedef struct addrinfo t_addrinfo;
+
 typedef struct stats {
   n_short total_packages;
   n_short received_packages;
 
   double sum, sumSquared;
 
-  struct timespec total_rtt;
-  struct timespec min, max, avg, stddev;
+  t_timespec total_rtt;
+  t_timespec min, max, avg, stddev;
 } t_stats;
 
 // socket.c
 const int32_t createSocket();
 void setSocket(const int32_t socket_fd, const char *inet_address);
 
-void sendPing(const int32_t socket_fd, const struct sockaddr_in address,
-              const t_packet *packet, size_t);
+const ssize_t sendPing(const int32_t socket_fd, const t_sockaddr_in address,
+                       const t_packet *packet, size_t);
 
-const ssize_t recvPing(uint8_t *, size_t, const int32_t,
-                       const struct sockaddr_in);
+const ssize_t recvPing(char *, size_t, const int32_t, const t_sockaddr_in);
 
 // imcp.c
 t_packet *initPacket();
 void changePacket(t_packet *);
 
 // address.c
-const struct sockaddr_in *setAddress(const char *);
+const t_sockaddr_in *setAddress(const char *);
 
 // message.c
 void messageOnStart(const char *, const char *, const ssize_t);
-void formatMessage(const u_int8_t *, ssize_t, struct timespec);
+void formatMessage(const char *, ssize_t, t_timespec);
 void messageOnQuit(const char *, const t_stats);
 
 // host.c
 const char *fetchHostname(const char *);
 
 // time.c
-const struct timespec setTime(const int32_t, const int32_t);
+const t_timespec setTime(const int32_t, const int32_t);
+const t_timespec setDuration(t_timespec t_start, t_timespec t_end);
+void getClock(t_timespec tv);
 void calculateAverage(t_stats *stats);
-void accumulate(struct timespec *total, struct timespec new);
+void accumulate(struct timespec *total, t_timespec new);
 double timespecToMs(struct timespec t);
 
 #endif // FT_PING_H
