@@ -35,11 +35,11 @@ writing to a sig_atomic_t variable can't be interrupted by a signal. This makes
 sig_atomic_t safe to use for communication between signal handlers and the main
 program, ensuring that data isn't corrupted by partial writes or reads.
 */
-volatile sig_atomic_t g_ping_loop = true;
+volatile sig_atomic_t g_ping_loop = true; // Only being used in main.c
 
 void handle_signal(int32_t sig) { g_ping_loop = false; }
 
-void updateStats(t_stats *stats, struct timespec new) {
+void updateStats(t_stats *stats, t_timespec new) {
   double newMs = timespecToMs(new);
 
   stats->received_packages++;
@@ -72,7 +72,7 @@ int32_t main(int argc, char *argv[]) {
   signal(SIGINT, handle_signal);
 
   t_stats stats;
-  struct timespec time = {0, 0}, t_start = {0, 0}, t_end = {0, 0};
+  t_timespec time = {0, 0}, t_start = {0, 0}, t_end = {0, 0};
 
   memset(&stats, 0, sizeof(t_stats));
 
@@ -133,5 +133,6 @@ int32_t main(int argc, char *argv[]) {
   messageOnQuit(argv[1], stats);
   (void)close(socket_fd);
   free(packet);
+
   return EXIT_SUCCESS;
 }
