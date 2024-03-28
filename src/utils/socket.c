@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/_types/_ssize_t.h>
 #include <sys/errno.h>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -50,25 +51,22 @@ void setSocket(const int32_t socket_fd, const char *inet_address) {
   }
 }
 
-void sendPing(int32_t socket_fd, const struct sockaddr_in address,
-              const t_packet *packet, size_t n) {
+const ssize_t sendPing(int32_t socket_fd, const struct sockaddr_in address,
+                       const t_packet *packet, size_t n) {
   ssize_t ret = sendto(socket_fd, packet, 64, 0, (struct sockaddr *)&address,
                        sizeof(address));
   if (ret < 0) {
     perror("sendto() error");
-    exit(EXIT_FAILURE);
   }
+
+  return ret;
 }
 
-const ssize_t recvPing(uint8_t *buf, size_t n, int32_t socket_fd,
-                       const struct sockaddr_in address) {
-  socklen_t addr_len = sizeof(struct sockaddr_in);
+const ssize_t recvPing(char *buf, size_t n, int32_t socket_fd,
+                       const t_sockaddr_in address) {
+  socklen_t addr_len = sizeof(t_sockaddr_in);
   ssize_t ret =
       recvfrom(socket_fd, buf, n, 0, (struct sockaddr *)&address, &addr_len);
-
-  if (ret < 0) {
-    perror("request timeout");
-  }
 
   return ret;
 }
