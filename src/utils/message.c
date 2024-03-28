@@ -25,7 +25,7 @@
   Wireshark to at least 98 bytes (84 bytes of IP and ICMP + 14 bytes of Ethernet
   header, and sometimes FCS or other Ethernet-level tags).
   */
-void formatMessage(const u_int8_t *buf, ssize_t numBytes, struct timespec tv) {
+void formatMessage(const char *buf, ssize_t numBytes, t_timespec tv) {
   struct ip *ip = (struct ip *)buf;
   u_int32_t ip_header_len = ip->ip_hl * 4;
 
@@ -64,6 +64,8 @@ void messageOnQuit(const char *input, const t_stats stats) {
           : 0.0;
   printf("%.1f%% packet loss\n", packet_loss);
 
-  printf("round-trip min/avg/max/stddev = %.3f/%.3f/%.3f/%.3f ms\n", minMs,
-         avgMs, maxMs, stddevMs);
+  if (avgMs && stddevMs) {
+    printf("round-trip min/avg/max/stddev = %.3f/%.3f/%.3f/%.3f ms\n", minMs,
+           avgMs, maxMs, stddevMs);
+  }
 }
