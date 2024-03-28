@@ -36,7 +36,7 @@ t_packet *initPacket();
 void changePacket(t_packet *);
 
 // address.c
-const t_sockaddr_in *setAddress(const char *);
+t_sockaddr_in *setAddress(const char *);
 
 // message.c
 void messageOnStart(const char *, const char *, const ssize_t);

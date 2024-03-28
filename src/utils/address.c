@@ -4,15 +4,24 @@
 #include <stdlib.h>
 #include <string.h>
 
-const struct sockaddr_in *setAddress(const char *inet_address) {
-  struct sockaddr_in *address = malloc(sizeof(struct sockaddr_in));
+#include "ft_ping.h"
 
-  memset(address, 0, sizeof(struct sockaddr_in));
+struct sockaddr_in *setAddress(const char *inet_address) {
+  t_sockaddr_in *address = malloc(sizeof(t_sockaddr_in));
+
+  if (!address) {
+    perror("malloc():");
+    exit(EXIT_FAILURE);
+  }
+
+  memset(address, 0, sizeof(t_sockaddr_in));
   address->sin_family = AF_INET;
   address->sin_addr.s_addr = inet_addr(inet_address);
   address->sin_port = htons(0);
 
   if (address->sin_addr.s_addr == INADDR_NONE) {
+    free(address);
+
     fprintf(stderr, "%s: Invalid address!\n", "setAddress");
     exit(EXIT_FAILURE);
   }

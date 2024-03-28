@@ -2,7 +2,7 @@
 #include <math.h>
 #include <netinet/ip_icmp.h>
 #include <signal.h>
-#include <stdint.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -57,9 +57,9 @@ void updateStats(t_stats *stats, t_timespec new) {
   stats->stddev.tv_nsec = (uint64_t)(stddevMs * 1000000) % 1000000000;
 }
 
-int32_t main(int argc, char *argv[]) {
-  if (argc <= 1) {
-    fprintf(stderr, "%s: I need more arguments\n", argv[0]);
+int32_t main(int32_t argc, char *argv[]) {
+  if (argc < 2) {
+    fprintf(stderr, "%s: need more arguments\n", argv[0]);
     return EXIT_FAILURE;
   }
 
@@ -79,7 +79,7 @@ int32_t main(int argc, char *argv[]) {
   setSocket(socket_fd, argv[1]);
   const char *ip_str = fetchHostname(argv[1]);
 
-  const t_sockaddr_in *address = setAddress(ip_str);
+  t_sockaddr_in *address = setAddress(ip_str);
   int32_t result = inet_pton(AF_INET, ip_str, (void *)&address->sin_addr);
 
   t_packet *packet = initPacket();
@@ -129,7 +129,9 @@ int32_t main(int argc, char *argv[]) {
 
   messageOnQuit(argv[1], stats);
   (void)close(socket_fd);
+  free(address);
   free(packet);
+  free((char *)ip_str);
 
   return EXIT_SUCCESS;
 }
