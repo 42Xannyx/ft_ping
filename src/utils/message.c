@@ -36,16 +36,16 @@ void formatMessage(const char *buf, ssize_t numBytes, t_timespec tv) {
   int64_t microseconds = (tv.tv_nsec % 1000000) / 1000;
 
   if (recv_icmp->icmp_type == ICMP_ECHOREPLY) {
-    printf("%zd bytes from %s: icmp_seq=%u ttl=%d time=%lld.%03lld ms\n",
-           icmp_payload_len, inet_ntoa(ip->ip_src),
-           recv_icmp->icmp_hun.ih_idseq.icd_seq, ip->ip_ttl, milliseconds,
-           microseconds);
+    (void)printf("%zd bytes from %s: icmp_seq=%u ttl=%d time=%lld.%03lld ms\n",
+                 icmp_payload_len, inet_ntoa(ip->ip_src),
+                 recv_icmp->icmp_hun.ih_idseq.icd_seq, ip->ip_ttl, milliseconds,
+                 microseconds);
   }
 }
 
 void messageOnStart(const char *ip_str, const char *input,
                     const ssize_t numBytes) {
-  printf("FT_PING %s (%s): %zu data bytes\n", input, ip_str, numBytes);
+  (void)printf("FT_PING %s (%s): %zu data bytes\n", input, ip_str, numBytes);
 }
 
 void messageOnQuit(const char *input, const t_stats stats) {
@@ -54,18 +54,18 @@ void messageOnQuit(const char *input, const t_stats stats) {
   double maxMs = timespecToMs(stats.max);
   double stddevMs = timespecToMs(stats.stddev);
 
-  printf("--- %s ping statistics ---\n", input);
-  printf("%hu packets transmitted, ", stats.total_packages);
-  printf("%hu packets received, ", stats.received_packages);
+  (void)printf("--- %s ping statistics ---\n", input);
+  (void)printf("%hu packets transmitted, ", stats.total_packages);
+  (void)printf("%hu packets received, ", stats.received_packages);
   double packet_loss =
       stats.total_packages > 0
           ? 100.0 * (stats.total_packages - stats.received_packages) /
                 stats.total_packages
           : 0.0;
-  printf("%.1f%% packet loss\n", packet_loss);
+  (void)printf("%.1f%% packet loss\n", packet_loss);
 
   if (avgMs && stddevMs) {
-    printf("round-trip min/avg/max/stddev = %.3f/%.3f/%.3f/%.3f ms\n", minMs,
-           avgMs, maxMs, stddevMs);
+    (void)printf("round-trip min/avg/max/stddev = %.3f/%.3f/%.3f/%.3f ms\n",
+                 minMs, avgMs, maxMs, stddevMs);
   }
 }

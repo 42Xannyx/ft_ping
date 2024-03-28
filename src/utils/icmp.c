@@ -35,10 +35,11 @@ unsigned short createChecksum(void *b, int32_t len) {
 
 static void createBody(uint8_t *payload, uint64_t size) {
   if (size >= PAYLOAD_SIZE) {
-    fprintf(stderr,
-            "Size of payload too big; size. Should be under 56. Current size: "
-            "%lu\n",
-            (unsigned long)size);
+    (void)fprintf(
+        stderr,
+        "Size of payload too big; size. Should be under 56. Current size: "
+        "%lu\n",
+        (unsigned long)size);
     exit(EXIT_FAILURE);
   }
 
@@ -52,7 +53,7 @@ static void createBody(uint8_t *payload, uint64_t size) {
 static void createHeader(struct icmp *header) {
   int32_t id = getpid() & 0xffff;
 
-  memset(header, 0, sizeof(struct icmp));
+  (void)memset(header, 0, sizeof(struct icmp));
 
   header->icmp_type = ICMP_ECHO;
   header->icmp_code = 0;
@@ -71,7 +72,12 @@ void changePacket(t_packet *packet) {
 t_packet *initPacket() {
   t_packet *packet = malloc(sizeof(t_packet));
 
-  memset(packet, 0, sizeof(t_packet));
+  if (!packet) {
+    perror("malloc() error");
+    exit(1);
+  }
+
+  (void)memset(packet, 0, sizeof(t_packet));
 
   createHeader(&packet->header);
   createBody((uint8_t *)&packet->payload, sizeof(packet->payload) - 1);

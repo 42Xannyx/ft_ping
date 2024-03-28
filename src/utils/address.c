@@ -14,7 +14,7 @@ struct sockaddr_in *setAddress(const char *inet_address) {
     exit(EXIT_FAILURE);
   }
 
-  memset(address, 0, sizeof(t_sockaddr_in));
+  (void)memset(address, 0, sizeof(t_sockaddr_in));
   address->sin_family = AF_INET;
   address->sin_addr.s_addr = inet_addr(inet_address);
   address->sin_port = htons(0);
@@ -22,7 +22,7 @@ struct sockaddr_in *setAddress(const char *inet_address) {
   if (address->sin_addr.s_addr == INADDR_NONE) {
     free(address);
 
-    fprintf(stderr, "%s: Invalid address!\n", "setAddress");
+    (void)fprintf(stderr, "%s: Invalid address!\n", "setAddress");
     exit(EXIT_FAILURE);
   }
 

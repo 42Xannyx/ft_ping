@@ -6,6 +6,7 @@
 #include <netinet/in_systm.h>
 #include <netinet/ip_icmp.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <time.h>
 
 typedef struct timespec t_timespec;

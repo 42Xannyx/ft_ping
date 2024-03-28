@@ -9,7 +9,7 @@ double timespecToMs(t_timespec tv) {
 }
 
 const t_timespec setTime(const int32_t sec, const int32_t nsec) {
-  struct timespec tv;
+  t_timespec tv;
 
   tv.tv_sec = sec;
   tv.tv_nsec = nsec;
@@ -30,7 +30,8 @@ void getClock(t_timespec *tv) {
   }
 
   if (i == 3) {
-    fprintf(stderr, "Failed to get monotonic clock time after 3 attempts.\n");
+    (void)fprintf(stderr,
+                  "Failed to get monotonic clock time after 3 attempts.\n");
     exit(EXIT_FAILURE);
   }
 }

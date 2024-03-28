@@ -58,28 +58,29 @@ void updateStats(t_stats *stats, t_timespec new) {
 }
 
 int32_t main(int32_t argc, char *argv[]) {
-  if (argc < 2) {
-    fprintf(stderr, "%s: need more arguments\n", argv[0]);
+  if (__builtin_expect(argc < 2, 2)) {
+    (void)fprintf(stderr, "%s: need more arguments\n", argv[0]);
     return EXIT_FAILURE;
   }
 
-  if (getuid() != 0) {
-    fprintf(stderr, "%s: This program requires root privileges!\n", argv[0]);
+  if (__builtin_expect(getuid() != 0, 0)) {
+    (void)fprintf(stderr, "%s: This program requires root privileges!\n",
+                  argv[0]);
     return EXIT_FAILURE;
   }
 
-  signal(SIGINT, handle_signal);
+  (void)signal(SIGINT, handle_signal);
 
   t_stats stats;
   t_timespec time = {0, 0}, t_start = {0, 0}, t_end = {0, 0};
 
-  memset(&stats, 0, sizeof(t_stats));
+  (void)memset(&stats, 0, sizeof(t_stats));
 
   const int32_t socket_fd = createSocket();
   setSocket(socket_fd, argv[1]);
   const char *ip_str = fetchHostname(argv[1]);
 
-  t_sockaddr_in *address = setAddress(ip_str);
+  const t_sockaddr_in *address = setAddress(ip_str);
   int32_t result = inet_pton(AF_INET, ip_str, (void *)&address->sin_addr);
 
   t_packet *packet = initPacket();
@@ -95,8 +96,8 @@ int32_t main(int32_t argc, char *argv[]) {
     getClock(&t_end);
 
     if (ret < 0) {
-      printf("request timeout for icmp_req=%d\n",
-             packet->header.icmp_hun.ih_idseq.icd_seq);
+      (void)fprintf(stderr, "request timeout for icmp_req=%d\n",
+                    packet->header.icmp_hun.ih_idseq.icd_seq);
     }
 
     if (ret >= 0) {
@@ -129,9 +130,9 @@ int32_t main(int32_t argc, char *argv[]) {
 
   messageOnQuit(argv[1], stats);
   (void)close(socket_fd);
-  free(address);
   free(packet);
   free((char *)ip_str);
+  free((t_sockaddr_in *)address);
 
   return EXIT_SUCCESS;
 }
