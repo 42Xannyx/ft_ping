@@ -3,8 +3,13 @@
 #define FLAGS_H
 
 #include <stdbool.h>
+#include <stdint.h>
 
 /* ************** */
+
+typedef struct flag_data {
+  long amount_deadline;
+} t_flag_data;
 
 /*
  * @summary: All possible flags
@@ -24,29 +29,32 @@
  * */
 typedef struct flags {
   bool verbose;
-  bool flood;
-  bool preload;
   bool numeric;
   bool deadline;
-  bool pattern;
   bool bypass;
   bool package_amount;
-  bool ttl;
   bool timestamp;
+
+  t_flag_data flag_data;
 } t_flags;
 
-typedef void (*flagHandler)(t_flags *);
+typedef void (*flagHandler)(t_flags *, char *);
 
 typedef struct {
   char *flag;
   flagHandler handler;
 } t_typeFlag;
 
-void handleFlood(t_flags *flags);
-void handlePreload(t_flags *flags);
-void handleVerbose(t_flags *flags);
-void handleVersion(t_flags *flags);
+t_flags *initFlags(int32_t argc, char *argv[]);
 
-t_flags *initFlags(char *argv[]);
+// Functions
+
+void handleVerbose(t_flags *flags, char *data);
+
+void handleVersion(t_flags *flags, char *data);
+
+void handleDeadline(t_flags *flags, char *data);
+
+void handleHelp();
 
 #endif // !FLAGS_H

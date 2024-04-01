@@ -8,7 +8,7 @@ double timespecToMs(t_timespec tv) {
   return tv.tv_sec * 1000.0 + tv.tv_nsec / 1000000.0;
 }
 
-const t_timespec setTime(const int32_t sec, const int32_t nsec) {
+t_timespec setTime(const int32_t sec, const int32_t nsec) {
   t_timespec tv;
 
   tv.tv_sec = sec;
@@ -36,7 +36,7 @@ void getClock(t_timespec *tv) {
   }
 }
 
-const t_timespec setDuration(t_timespec t_start, t_timespec t_end) {
+t_timespec setDuration(t_timespec t_start, t_timespec t_end) {
   t_timespec time = {0, 0};
 
   if ((t_end.tv_nsec - t_start.tv_nsec) < 0) {

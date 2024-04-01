@@ -1,12 +1,11 @@
 #ifndef FT_PING_H
 #define FT_PING_H
 
-#include "flags.h"
 #include "payload.h"
+
 #include <netinet/in.h>
 #include <netinet/in_systm.h>
 #include <netinet/ip_icmp.h>
-#include <signal.h>
 #include <stdint.h>
 #include <time.h>
 
@@ -31,13 +30,13 @@ typedef struct stats {
 } t_stats;
 
 // socket.c
-const int32_t createSocket();
-void setSocket(const int32_t socket_fd, const char *inet_address);
+int32_t createSocket();
+void setSocket(const int32_t socket_fd);
 
-const ssize_t sendPing(const int32_t socket_fd, const t_sockaddr_in address,
-                       const t_packet *packet, size_t);
+ssize_t sendPing(const int32_t socket_fd, const t_sockaddr_in address,
+                 const t_packet *packet, size_t);
 
-const ssize_t recvPing(char *, size_t, const int32_t, const t_sockaddr_in);
+ssize_t recvPing(char *, size_t, const int32_t, const t_sockaddr_in);
 
 // imcp.c
 t_packet *initPacket();
@@ -55,8 +54,8 @@ void messageOnQuit(const char *, const t_stats);
 const char *fetchHostname(const char *);
 
 // time.c
-const t_timespec setTime(const int32_t, const int32_t);
-const t_timespec setDuration(t_timespec t_start, t_timespec t_end);
+t_timespec setTime(const int32_t, const int32_t);
+t_timespec setDuration(t_timespec t_start, t_timespec t_end);
 void getClock(t_timespec *tv);
 void calculateAverage(t_stats *stats);
 void accumulate(struct timespec *total, t_timespec new);

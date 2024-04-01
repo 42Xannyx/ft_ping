@@ -9,11 +9,11 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 
 if(DEBUG)
     message(STATUS "Building in debug mode")
-    target_compile_options(${PROJECT_NAME} PRIVATE -g3 -fsanitize=address -Ofast)
+    target_compile_options(${PROJECT_NAME} PRIVATE -g3 -fsanitize=address -Ofast -Wall -Wextra -Werror)
     target_link_options(${PROJECT_NAME} PRIVATE -fsanitize=address)
 else()
     message(STATUS "Building in release mode")
-    target_compile_options(${PROJECT_NAME} PRIVATE -Ofast)
+  target_compile_options(${PROJECT_NAME} PRIVATE -Ofast -Wall -Wextra -Werror)
 endif()
 
 if(BONUS)

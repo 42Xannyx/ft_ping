@@ -1,51 +1,31 @@
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "flags.h"
-#include "ft_ping.h"
 
-void handleVerbose(t_flags *flags) { flags->verbose = true; }
-
-void handleVersion(t_flags *flags) {
-  (void)printf("ft_ping from 42Xannyx 20240328\n");
-  exit(EXIT_SUCCESS);
-}
-
-void handleFlood(t_flags *flags) { flags->flood = true; }
-
-void handlePreload(t_flags *flags) {
-  if (flags->preload == false) {
-    (void)printf("Preload is on\n");
-  }
-
-  flags->preload = true;
-}
-
-static void findFlag(t_flags *flags, char *arg) {
-  t_typeFlag flag_mappings[] = {{"-v", handleVerbose},
-                                {"-f", handleFlood},
-                                {"-V", handleVersion},
-                                {"-l", handleVersion},
-                                {"-n", handleVersion},
-                                {"-w", handleVersion},
-                                {"-W", handleVersion},
-                                {"-p", handleVersion},
-                                {"-r", handleVersion},
+static void findFlag(t_flags *flags, char *flag, char *data) {
+  t_typeFlag flag_mappings[] = {{"-V", handleVersion},
+                                {"-w", handleDeadline},
                                 {"-s", handleVersion},
-                                {"-T", handleVersion},
-                                {"--ttl", handleVersion},
-                                {"--ip-timestamp", handleVersion},
                                 {NULL, NULL}};
 
   for (int32_t i = 0; flag_mappings[i].flag; i++) {
-    if (strcmp(arg, flag_mappings[i].flag) == 0) {
-      flag_mappings[i].handler(flags);
+    if (strcmp(flag, "-?") == 0 || strcmp(flag, "--help") == 0) {
+      handleHelp();
+    }
+    if (strcmp(flag, "-v") == 0) {
+      handleVerbose(flags, data);
+    }
+
+    if (BONUS && strcmp(flag, flag_mappings[i].flag) == 0) {
+      flag_mappings[i].handler(flags, data);
     }
   }
 }
 
-t_flags *initFlags(char *argv[]) {
+t_flags *initFlags(int32_t argc, char *argv[]) {
   t_flags *flags = malloc(sizeof(t_flags));
 
   memset(flags, false, sizeof(&flags));
@@ -55,8 +35,8 @@ t_flags *initFlags(char *argv[]) {
     exit(EXIT_FAILURE);
   }
 
-  for (int32_t i = 1; argv[i]; i++) {
-    findFlag(flags, argv[i]);
+  for (int32_t i = 1; i < argc; i++) {
+    findFlag(flags, argv[i], argv[i + 1]);
   }
 
   return flags;

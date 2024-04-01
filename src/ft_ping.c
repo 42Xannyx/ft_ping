@@ -1,3 +1,7 @@
+#include "ft_ping.h"
+#include "flags.h"
+#include "payload.h"
+
 #include <arpa/inet.h>
 #include <math.h>
 #include <netinet/ip_icmp.h>
@@ -10,13 +14,12 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "flags.h"
-#include "ft_ping.h"
-#include "payload.h"
-
 volatile sig_atomic_t g_ping_loop = true; // Signal use only!
 
-void handle_signal(int32_t sig) { g_ping_loop = false; }
+void handle_signal(int32_t sig) {
+  (void)sig;
+  g_ping_loop = false;
+}
 
 void updateStats(t_stats *stats, t_timespec new) {
   double newMs = timespecToMs(new);
@@ -51,11 +54,7 @@ int32_t main(int32_t argc, char *argv[]) {
 
   (void)signal(SIGINT, handle_signal);
 
-  t_flags *flags = NULL;
-
-  if (BONUS) {
-    flags = initFlags(argv);
-  }
+  t_flags *flags = initFlags(argc, argv);
 
   const char *ip = argv[argc - 1];
 
@@ -65,11 +64,15 @@ int32_t main(int32_t argc, char *argv[]) {
   (void)memset(&stats, 0, sizeof(t_stats));
 
   const int32_t socket_fd = createSocket();
-  setSocket(socket_fd, ip);
+  setSocket(socket_fd);
   const char *ip_str = fetchHostname(ip);
 
   const t_sockaddr_in *address = setAddress(ip_str);
   int32_t result = inet_pton(AF_INET, ip_str, (void *)&address->sin_addr);
+  if (result < 1) {
+    perror("inet_pton()");
+    return (EXIT_FAILURE);
+  }
 
   t_packet *packet = initPacket();
   messageOnStart(ip_str, ip, sizeof(packet->payload));
@@ -111,6 +114,14 @@ int32_t main(int32_t argc, char *argv[]) {
     }
 
     changePacket(packet);
+
+    if (BONUS && flags->deadline == true) {
+      flags->flag_data.amount_deadline--;
+
+      if (flags->deadline && flags->flag_data.amount_deadline <= 0) {
+        break;
+      }
+    }
   }
 
   stats.total_packages = packet->header.icmp_hun.ih_idseq.icd_seq;
@@ -122,9 +133,7 @@ int32_t main(int32_t argc, char *argv[]) {
   free((char *)ip_str);
   free((t_sockaddr_in *)address);
 
-  if (BONUS) {
-    free(flags);
-  }
+  free(flags);
 
   return EXIT_SUCCESS;
 }

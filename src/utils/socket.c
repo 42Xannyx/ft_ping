@@ -15,7 +15,7 @@
 
 #define RECV_TIMEOUT 1
 
-const int32_t createSocket() {
+int32_t createSocket() {
   const int32_t socket_fd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
 
   if (socket_fd < 0) {
@@ -29,10 +29,9 @@ const int32_t createSocket() {
 /*
  * Useful link: https://www.geeksforgeeks.org/ping-in-c/
  */
-void setSocket(const int32_t socket_fd, const char *inet_address) {
+void setSocket(const int32_t socket_fd) {
   int32_t ttl = 64;
 
-  struct sockaddr_in address;
   struct timeval tv;
 
   tv.tv_sec = RECV_TIMEOUT;
@@ -51,10 +50,11 @@ void setSocket(const int32_t socket_fd, const char *inet_address) {
   }
 }
 
-const ssize_t sendPing(int32_t socket_fd, const struct sockaddr_in address,
-                       const t_packet *packet, size_t n) {
-  ssize_t ret = sendto(socket_fd, packet, 64, 0, (struct sockaddr *)&address,
-                       sizeof(address));
+ssize_t sendPing(int32_t socket_fd, const struct sockaddr_in address,
+                 const t_packet *packet, size_t n) {
+
+  ssize_t ret = sendto(socket_fd, packet, n - 20, 0,
+                       (struct sockaddr *)&address, sizeof(address));
   if (ret < 0) {
     perror("sendto() error");
   }
@@ -62,8 +62,8 @@ const ssize_t sendPing(int32_t socket_fd, const struct sockaddr_in address,
   return ret;
 }
 
-const ssize_t recvPing(char *buf, size_t n, int32_t socket_fd,
-                       const t_sockaddr_in address) {
+ssize_t recvPing(char *buf, size_t n, int32_t socket_fd,
+                 const t_sockaddr_in address) {
   socklen_t addr_len = sizeof(t_sockaddr_in);
   ssize_t ret =
       recvfrom(socket_fd, buf, n, 0, (struct sockaddr *)&address, &addr_len);
