@@ -9,7 +9,6 @@
 static void findFlag(t_flags *flags, char *flag, char *data) {
   t_typeFlag flag_mappings[] = {{"-V", handleVersion},
                                 {"-w", handleDeadline},
-                                {"-s", handleVersion},
                                 {NULL, NULL}};
 
   for (int32_t i = 0; flag_mappings[i].flag; i++) {
