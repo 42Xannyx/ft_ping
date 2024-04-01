@@ -20,6 +20,7 @@ fetchHostname(const char *hostname) {
 
   hints.ai_family = PF_INET;
   hints.ai_socktype = SOCK_RAW;
+  hints.ai_canonname = (char *)hostname;
 
   int32_t ret = getaddrinfo(hostname, NULL, &hints, &result);
   if (__builtin_expect(ret > 0, 0)) {

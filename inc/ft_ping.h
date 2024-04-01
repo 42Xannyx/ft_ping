@@ -47,6 +47,7 @@ t_sockaddr_in *setAddress(const char *);
 
 // message.c
 void messageOnStart(const char *, const char *, const ssize_t);
+void verboseMessageOnStart(const int32_t, const char*);
 void formatMessage(const char *, ssize_t, t_timespec);
 void messageOnQuit(const char *, const t_stats);
 

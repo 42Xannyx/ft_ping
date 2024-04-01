@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <time.h>
 
+#include "flags.h"
 #include "ft_ping.h"
 
 /**
@@ -41,6 +42,13 @@ void formatMessage(const char *buf, ssize_t numBytes, t_timespec tv) {
                  recv_icmp->icmp_hun.ih_idseq.icd_seq, ip->ip_ttl, milliseconds,
                  microseconds);
   }
+}
+
+void verboseMessageOnStart(const int32_t socket_fd, const char *canonname) {
+  (void)printf("ft_ping: sock4.fd: %d (socktype: SOCK_RAW), hints.ai_family: "
+               "AF_INET\n\n",
+               socket_fd);
+  (void)printf("ai->ai_family: AF_INET, ai->ai_canonname: '%s'\n", canonname);
 }
 
 void messageOnStart(const char *ip_str, const char *input,

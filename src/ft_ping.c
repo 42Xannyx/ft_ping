@@ -75,6 +75,10 @@ int32_t main(int32_t argc, char *argv[]) {
   }
 
   t_packet *packet = initPacket();
+
+  if (flags->verbose) {
+    verboseMessageOnStart(socket_fd, argv[argc - 1]);
+  }
   messageOnStart(ip_str, ip, sizeof(packet->payload));
 
   while (g_ping_loop) {
@@ -116,9 +120,9 @@ int32_t main(int32_t argc, char *argv[]) {
     changePacket(packet);
 
     if (BONUS && flags->deadline == true) {
-      flags->flag_data.amount_deadline--;
+      flags->amount_deadline--;
 
-      if (flags->deadline && flags->flag_data.amount_deadline <= 0) {
+      if (flags->deadline && flags->amount_deadline <= 0) {
         break;
       }
     }

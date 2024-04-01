@@ -61,5 +61,5 @@ void handleDeadline(t_flags *flags, char *data) {
     flags->deadline = false;
   }
 
-  flags->flag_data.amount_deadline = amount;
+  flags->amount_deadline = amount;
 }

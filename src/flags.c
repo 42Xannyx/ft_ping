@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "flags.h"
+#include "ft_ping.h"
 
 static void findFlag(t_flags *flags, char *flag, char *data) {
   t_typeFlag flag_mappings[] = {{"-V", handleVersion},

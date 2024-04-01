@@ -7,10 +7,6 @@
 
 /* ************** */
 
-typedef struct flag_data {
-  long amount_deadline;
-} t_flag_data;
-
 /*
  * @summary: All possible flags
  *
@@ -29,13 +25,9 @@ typedef struct flag_data {
  * */
 typedef struct flags {
   bool verbose;
-  bool numeric;
   bool deadline;
-  bool bypass;
-  bool package_amount;
-  bool timestamp;
 
-  t_flag_data flag_data;
+  long amount_deadline;
 } t_flags;
 
 typedef void (*flagHandler)(t_flags *, char *);
