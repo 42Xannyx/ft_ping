@@ -5,18 +5,8 @@
 ## Supported Flags
 
 - `-v`: Verbose output. Provides additional details for each packet response.
-- `-f`: Flood ping. Sends packets as fast as they come back or one hundred times per second.
 - `-V`: Show version of the ft_ping program.
-- `-l`: Preload. Sends that many packets not waiting for reply. Only available for the superuser.
-- `-n`: Numeric output only. Does not resolve hostnames to addresses.
 - `-w`: Deadline. Specifies how long to wait for a response to the echo request.
-- `-W`: Timeout. Time to wait for a response.
-- `-p`: Pattern. Allows you to specify up to 16 "pad" bytes to fill out the packet.
-- `-r`: Bypass the normal routing tables and send directly to a host on an attached network.
-- `-s`: Specifies the number of data bytes to be sent.
-- `-T`: Timestamp. Specifies the timestamp option for ICMP requests.
-- `--ttl`: Time To Live.
-- `--ip-timestamp`: Include IP timestamp in the packet.
 
 ## What I Learned
 
