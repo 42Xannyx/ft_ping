@@ -2,9 +2,7 @@
 #include <netinet/ip_icmp.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <time.h>
 
-#include "flags.h"
 #include "ft_ping.h"
 
 /**
@@ -37,7 +35,7 @@ void formatMessage(const char *buf, ssize_t numBytes, t_timespec tv) {
   int64_t microseconds = (tv.tv_nsec % 1000000) / 1000;
 
   if (recv_icmp->icmp_type == ICMP_ECHOREPLY) {
-    (void)printf("%zd bytes from %s: icmp_seq=%u ttl=%d time=%lld.%03lld ms\n",
+    (void)printf("%zd bytes from %s: icmp_seq=%u ttl=%d time=%ld.%03ld ms\n",
                  icmp_payload_len, inet_ntoa(ip->ip_src),
                  recv_icmp->icmp_hun.ih_idseq.icd_seq, ip->ip_ttl, milliseconds,
                  microseconds);
