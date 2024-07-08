@@ -24,7 +24,8 @@
   Wireshark to at least 98 bytes (84 bytes of IP and ICMP + 14 bytes of Ethernet
   header, and sometimes FCS or other Ethernet-level tags).
   */
-void format_message(const char *buf, ssize_t numBytes, t_timespec tv) {
+void format_message(const char *buf, ssize_t numBytes, t_timespec tv,
+                    uint16_t ident, bool verbose) {
   struct ip *ip = (struct ip *)buf;
   u_int32_t ip_header_len = ip->ip_hl * 4;
 
@@ -34,12 +35,22 @@ void format_message(const char *buf, ssize_t numBytes, t_timespec tv) {
   int64_t milliseconds = tv.tv_nsec / 1000000;
   int64_t microseconds = (tv.tv_nsec % 1000000) / 1000;
 
-  if (recv_icmp->icmp_type == ICMP_ECHOREPLY) {
-    (void)printf("%zd bytes from %s: icmp_seq=%u ttl=%d time=%ld.%03ld ms\n",
-                 icmp_payload_len, inet_ntoa(ip->ip_src),
-                 recv_icmp->icmp_hun.ih_idseq.icd_seq, ip->ip_ttl, milliseconds,
-                 microseconds);
+  if (recv_icmp->icmp_type != ICMP_ECHOREPLY) {
+    return;
   }
+  if (verbose) {
+    (void)printf(
+        "%zd bytes from %s: icmp_seq=%u ident=%d ttl=%d time=%ld.%03ld ms\n",
+        icmp_payload_len, inet_ntoa(ip->ip_src),
+        recv_icmp->icmp_hun.ih_idseq.icd_seq, ident, ip->ip_ttl, milliseconds,
+        microseconds);
+
+    return;
+  }
+  (void)printf("%zd bytes from %s: icmp_seq=%u ttl=%d time=%ld.%03ld ms\n",
+               icmp_payload_len, inet_ntoa(ip->ip_src),
+               recv_icmp->icmp_hun.ih_idseq.icd_seq, ip->ip_ttl, milliseconds,
+               microseconds);
 }
 
 void verbose_message_on_start(const int32_t socket_fd, const char *canonname) {
@@ -54,11 +65,13 @@ void message_on_start(const char *ip_str, const char *input,
   (void)printf("FT_PING %s (%s): %zu data bytes\n", input, ip_str, numBytes);
 }
 
-void message_on_quit(const char *input, const t_stats stats) {
+void message_on_quit(const char *input, const t_stats stats,
+                     t_timespec total_time) {
   double minMs = timespec_to_ms(stats.min);
   double avgMs = timespec_to_ms(stats.avg);
   double maxMs = timespec_to_ms(stats.max);
   double stddevMs = timespec_to_ms(stats.stddev);
+  double total = timespec_to_ms(total_time) * 1000;
 
   (void)printf("--- %s ping statistics ---\n", input);
   (void)printf("%hu packets transmitted, ", stats.total_packages);
@@ -68,10 +81,11 @@ void message_on_quit(const char *input, const t_stats stats) {
           ? 100.0 * (stats.total_packages - stats.received_packages) /
                 stats.total_packages
           : 0.0;
-  (void)printf("%.1f%% packet loss\n", packet_loss);
+  (void)printf("%.1f%% packet loss, ", packet_loss);
+  (void)printf("%ldms time\n", (long)total);
 
   if (avgMs && stddevMs) {
-    (void)printf("round-trip min/avg/max/stddev = %.3f/%.3f/%.3f/%.3f ms\n",
-                 minMs, avgMs, maxMs, stddevMs);
+    (void)printf("rtt min/avg/max/mdev = %.3f/%.3f/%.3f/%.3f ms\n", minMs,
+                 avgMs, maxMs, stddevMs);
   }
 }

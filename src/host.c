@@ -21,13 +21,12 @@ const char *fetch_hostname(const char *hostname) {
   int32_t ret = getaddrinfo(hostname, NULL, &hints, &result);
   if (__builtin_expect(ret > 0, 0)) {
     (void)fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(ret));
-    exit(1);
+    exit(EXIT_FAILURE);
   }
 
   if (result->ai_family != AF_INET) {
     (void)fprintf(stderr, "IPv6 addresses not handled\n");
-    freeaddrinfo(result);
-    exit(1);
+    exit(EXIT_FAILURE);
   }
 
   char *ip_str = malloc(NI_MAXHOST);

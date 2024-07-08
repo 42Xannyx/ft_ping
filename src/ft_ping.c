@@ -54,12 +54,10 @@ int32_t main(int32_t argc, char *argv[]) {
 
   (void)signal(SIGINT, handle_signal);
 
-  t_flags *flags = init_flags(argc, argv);
-
-  const char *ip = argv[argc - 1];
-
   t_stats stats;
   t_timespec time = {0, 0}, t_start = {0, 0}, t_end = {0, 0};
+  t_flags *flags = init_flags(argc, argv);
+  const char *ip = argv[argc - 1];
 
   (void)memset(&stats, 0, sizeof(t_stats));
 
@@ -97,6 +95,7 @@ int32_t main(int32_t argc, char *argv[]) {
 
     if (ret >= 0) {
       time = set_duration(t_start, t_end);
+      uint16_t ident = packet->header.icmp_hun.ih_idseq.icd_id;
 
       if (packet->header.icmp_hun.ih_idseq.icd_seq == 0) {
         stats.min = time;
@@ -112,7 +111,7 @@ int32_t main(int32_t argc, char *argv[]) {
       accumulate(&stats.total_rtt, time);
       update_stats(&stats, time);
 
-      format_message(buf, ret, time);
+      format_message(buf, ret, time, ident, flags->verbose);
 
       (void)usleep(PING_SLEEP_RATE);
     }
@@ -131,7 +130,7 @@ int32_t main(int32_t argc, char *argv[]) {
   stats.total_packages = packet->header.icmp_hun.ih_idseq.icd_seq;
   calculate_average(&stats);
 
-  message_on_quit(ip, stats);
+  message_on_quit(ip, stats, time);
   (void)close(socket_fd);
   free(packet);
   free((char *)ip_str);

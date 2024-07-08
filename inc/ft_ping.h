@@ -6,6 +6,7 @@
 #include <netinet/in.h>
 #include <netinet/in_systm.h>
 #include <netinet/ip_icmp.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <time.h>
 
@@ -25,39 +26,44 @@ typedef struct stats {
 
   double sum, sumSquared;
 
-  t_timespec total_rtt;
+  t_timespec total_rtt, total_time;
   t_timespec min, max, avg, stddev;
 } t_stats;
 
 // socket.c
-int32_t create_socket(void);
+__attribute__((warn_unused_result)) int32_t create_socket(void);
 void set_socket(const int32_t socket_fd);
 
-ssize_t send_ping(const int32_t socket_fd, const t_sockaddr_in address,
-                  const t_packet *packet, size_t);
+__attribute__((warn_unused_result)) ssize_t
+send_ping(const int32_t socket_fd, const t_sockaddr_in address,
+          const t_packet *packet, size_t);
 
-ssize_t recv_ping(char *, size_t, const int32_t, const t_sockaddr_in);
+__attribute__((warn_unused_result)) ssize_t recv_ping(char *, size_t,
+                                                      const int32_t,
+                                                      const t_sockaddr_in);
 
 // imcp.c
-t_packet *init_packet();
+__attribute__((warn_unused_result)) t_packet *init_packet();
 void change_packet(t_packet *);
 
 // address.c
-t_sockaddr_in *set_address(const char *);
+__attribute__((warn_unused_result)) t_sockaddr_in *set_address(const char *);
 
 // message.c
 void message_on_start(const char *, const char *, const ssize_t);
 void verbose_message_on_start(const int32_t, const char *);
-void format_message(const char *, ssize_t, t_timespec);
-void message_on_quit(const char *, const t_stats);
+void format_message(const char *, ssize_t, t_timespec, uint16_t ident,
+                    bool verbose);
+void message_on_quit(const char *, const t_stats, t_timespec total_time);
 
 // host.c
 __attribute__((warn_unused_result)) const char *fetch_hostname(const char *);
 
 // time.c
-t_timespec set_duration(t_timespec t_start, t_timespec t_end);
 void get_clock(t_timespec *tv);
 void calculate_average(t_stats *stats);
+__attribute__((warn_unused_result)) t_timespec set_duration(t_timespec t_start,
+                                                            t_timespec t_end);
 
 //******* Functions *******//
 
