@@ -5,20 +5,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void handleVerbose(t_flags *flags, char *data) {
+void handle_verbose(t_flags *flags, char *data) {
   (void)data;
   flags->verbose = true;
 }
 
-void handleVersion(t_flags *flags, char *data) {
+void handle_version(t_flags *flags, char *data) {
   (void)flags;
   (void)data;
-
   (void)printf("ft_ping from 42Xannyx 20240401\n");
   exit(EXIT_SUCCESS);
 }
 
-void handleHelp() {
+void handle_help() {
   (void)printf("Usage: ft_ping [OPTIONS] DESTINATION\n");
   (void)printf("Send ICMP ECHO_REQUEST to network hosts.\n\n");
   (void)printf("Options:\n");
@@ -35,7 +34,7 @@ void handleHelp() {
   exit(EXIT_SUCCESS);
 }
 
-void handleDeadline(t_flags *flags, char *data) {
+void handle_deadline(t_flags *flags, char *data) {
   flags->deadline = true;
 
   if (!data) {

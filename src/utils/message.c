@@ -24,7 +24,7 @@
   Wireshark to at least 98 bytes (84 bytes of IP and ICMP + 14 bytes of Ethernet
   header, and sometimes FCS or other Ethernet-level tags).
   */
-void formatMessage(const char *buf, ssize_t numBytes, t_timespec tv) {
+void format_message(const char *buf, ssize_t numBytes, t_timespec tv) {
   struct ip *ip = (struct ip *)buf;
   u_int32_t ip_header_len = ip->ip_hl * 4;
 
@@ -42,23 +42,23 @@ void formatMessage(const char *buf, ssize_t numBytes, t_timespec tv) {
   }
 }
 
-void verboseMessageOnStart(const int32_t socket_fd, const char *canonname) {
+void verbose_message_on_start(const int32_t socket_fd, const char *canonname) {
   (void)printf("ft_ping: sock4.fd: %d (socktype: SOCK_RAW), hints.ai_family: "
                "AF_INET\n\n",
                socket_fd);
   (void)printf("ai->ai_family: AF_INET, ai->ai_canonname: '%s'\n", canonname);
 }
 
-void messageOnStart(const char *ip_str, const char *input,
-                    const ssize_t numBytes) {
+void message_on_start(const char *ip_str, const char *input,
+                      const ssize_t numBytes) {
   (void)printf("FT_PING %s (%s): %zu data bytes\n", input, ip_str, numBytes);
 }
 
-void messageOnQuit(const char *input, const t_stats stats) {
-  double minMs = timespecToMs(stats.min);
-  double avgMs = timespecToMs(stats.avg);
-  double maxMs = timespecToMs(stats.max);
-  double stddevMs = timespecToMs(stats.stddev);
+void message_on_quit(const char *input, const t_stats stats) {
+  double minMs = timespec_to_ms(stats.min);
+  double avgMs = timespec_to_ms(stats.avg);
+  double maxMs = timespec_to_ms(stats.max);
+  double stddevMs = timespec_to_ms(stats.stddev);
 
   (void)printf("--- %s ping statistics ---\n", input);
   (void)printf("%hu packets transmitted, ", stats.total_packages);

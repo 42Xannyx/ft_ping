@@ -6,7 +6,7 @@
 
 #include "ft_ping.h"
 
-struct sockaddr_in *setAddress(const char *inet_address) {
+struct sockaddr_in *set_address(const char *inet_address) {
   t_sockaddr_in *address = malloc(sizeof(t_sockaddr_in));
 
   if (!address) {

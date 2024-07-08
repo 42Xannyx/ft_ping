@@ -21,8 +21,8 @@ void handle_signal(int32_t sig) {
   g_ping_loop = false;
 }
 
-void updateStats(t_stats *stats, t_timespec new) {
-  double newMs = timespecToMs(new);
+void update_stats(t_stats *stats, t_timespec new) {
+  double newMs = timespec_to_ms(new);
 
   stats->received_packages++;
   stats->sum += newMs;
@@ -54,7 +54,7 @@ int32_t main(int32_t argc, char *argv[]) {
 
   (void)signal(SIGINT, handle_signal);
 
-  t_flags *flags = initFlags(argc, argv);
+  t_flags *flags = init_flags(argc, argv);
 
   const char *ip = argv[argc - 1];
 
@@ -63,32 +63,32 @@ int32_t main(int32_t argc, char *argv[]) {
 
   (void)memset(&stats, 0, sizeof(t_stats));
 
-  const int32_t socket_fd = createSocket();
-  setSocket(socket_fd);
-  const char *ip_str = fetchHostname(ip);
+  const int32_t socket_fd = create_socket();
+  set_socket(socket_fd);
+  const char *ip_str = fetch_hostname(ip);
 
-  const t_sockaddr_in *address = setAddress(ip_str);
+  const t_sockaddr_in *address = set_address(ip_str);
   int32_t result = inet_pton(AF_INET, ip_str, (void *)&address->sin_addr);
   if (result < 1) {
     perror("inet_pton()");
     return (EXIT_FAILURE);
   }
 
-  t_packet *packet = initPacket();
+  t_packet *packet = init_packet();
 
   if (flags->verbose) {
-    verboseMessageOnStart(socket_fd, argv[argc - 1]);
+    verbose_message_on_start(socket_fd, argv[argc - 1]);
   }
-  messageOnStart(ip_str, ip, sizeof(packet->payload));
+  message_on_start(ip_str, ip, sizeof(packet->payload));
 
   while (g_ping_loop) {
     char buf[84]; // ICMP Payload (64 Bytes) + IP Header (20 Bytes)
 
-    ssize_t ret = sendPing(socket_fd, *address, packet, sizeof(*packet));
-    getClock(&t_start);
+    ssize_t ret = send_ping(socket_fd, *address, packet, sizeof(*packet));
+    get_clock(&t_start);
 
-    ret = recvPing(buf, sizeof(buf), socket_fd, *address);
-    getClock(&t_end);
+    ret = recv_ping(buf, sizeof(buf), socket_fd, *address);
+    get_clock(&t_end);
 
     if (ret < 0) {
       (void)fprintf(stderr, "request timeout for icmp_req=%d\n",
@@ -96,7 +96,7 @@ int32_t main(int32_t argc, char *argv[]) {
     }
 
     if (ret >= 0) {
-      time = setDuration(t_start, t_end);
+      time = set_duration(t_start, t_end);
 
       if (packet->header.icmp_hun.ih_idseq.icd_seq == 0) {
         stats.min = time;
@@ -110,14 +110,14 @@ int32_t main(int32_t argc, char *argv[]) {
       }
 
       accumulate(&stats.total_rtt, time);
-      updateStats(&stats, time);
+      update_stats(&stats, time);
 
-      formatMessage(buf, ret, time);
+      format_message(buf, ret, time);
 
       (void)usleep(PING_SLEEP_RATE);
     }
 
-    changePacket(packet);
+    change_packet(packet);
 
     if (BONUS && flags->deadline == true) {
       flags->amount_deadline--;
@@ -129,9 +129,9 @@ int32_t main(int32_t argc, char *argv[]) {
   }
 
   stats.total_packages = packet->header.icmp_hun.ih_idseq.icd_seq;
-  calculateAverage(&stats);
+  calculate_average(&stats);
 
-  messageOnQuit(ip, stats);
+  message_on_quit(ip, stats);
   (void)close(socket_fd);
   free(packet);
   free((char *)ip_str);

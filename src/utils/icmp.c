@@ -16,7 +16,7 @@
  *complement of 1111 1111 is 0000 0000, a result of 0 indicates that the data
  *has likely not been altered during transmission.
  */
-unsigned short createChecksum(void *b, int32_t len) {
+unsigned short create_checksum(void *b, int32_t len) {
   unsigned short *buf = b;
   unsigned int sum = 0;
   unsigned short result;
@@ -33,7 +33,7 @@ unsigned short createChecksum(void *b, int32_t len) {
   return result;
 }
 
-static void createBody(uint8_t *payload, uint64_t size) {
+static void create_body(uint8_t *payload, uint64_t size) {
   if (size >= PAYLOAD_SIZE) {
     (void)fprintf(
         stderr,
@@ -50,7 +50,7 @@ static void createBody(uint8_t *payload, uint64_t size) {
   payload[size] = '\0';
 }
 
-static void createHeader(struct icmp *header) {
+static void create_header(struct icmp *header) {
   int32_t id = getpid() & 0xffff;
 
   (void)memset(header, 0, sizeof(struct icmp));
@@ -62,14 +62,14 @@ static void createHeader(struct icmp *header) {
   header->icmp_cksum = 0;
 }
 
-void changePacket(t_packet *packet) {
+void change_packet(t_packet *packet) {
   packet->header.icmp_hun.ih_idseq.icd_seq++;
 
   packet->header.icmp_cksum = 0;
-  packet->header.icmp_cksum = createChecksum((uint16_t *)packet, 64);
+  packet->header.icmp_cksum = create_checksum((uint16_t *)packet, 64);
 }
 
-t_packet *initPacket() {
+t_packet *init_packet() {
   t_packet *packet = malloc(sizeof(t_packet));
 
   if (!packet) {
@@ -79,9 +79,9 @@ t_packet *initPacket() {
 
   (void)memset(packet, 0, sizeof(t_packet));
 
-  createHeader(&packet->header);
-  createBody((uint8_t *)&packet->payload, sizeof(packet->payload) - 1);
-  packet->header.icmp_cksum = createChecksum((uint16_t *)packet, 64);
+  create_header(&packet->header);
+  create_body((uint8_t *)&packet->payload, sizeof(packet->payload) - 1);
+  packet->header.icmp_cksum = create_checksum((uint16_t *)packet, 64);
 
   return packet;
 }

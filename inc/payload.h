@@ -4,6 +4,7 @@
 #define ICMP_HEADER_LEN 8
 #define PAYLOAD_SIZE 56
 
+#include <netinet/ip.h>
 #include <netinet/ip_icmp.h>
 #include <stdint.h>
 

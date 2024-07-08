@@ -9,11 +9,7 @@
 
 #include "ft_ping.h"
 
-/*
- *  Warn if return is not used
- */
-__attribute__((warn_unused_result)) const char *
-fetchHostname(const char *hostname) {
+const char *fetch_hostname(const char *hostname) {
   t_addrinfo hints, *result;
 
   (void)memset(&hints, 0, sizeof(hints));

@@ -30,23 +30,23 @@ typedef struct flags {
   long amount_deadline;
 } t_flags;
 
-typedef void (*flagHandler)(t_flags *, char *);
+typedef void (*flag_handler)(t_flags *, char *);
 
 typedef struct {
   char *flag;
-  flagHandler handler;
+  flag_handler handler;
 } t_typeFlag;
 
-t_flags *initFlags(int32_t argc, char *argv[]);
+t_flags *init_flags(int32_t argc, char *argv[]);
 
 // Functions
 
-void handleVerbose(t_flags *flags, char *data);
+void handle_verbose(t_flags *flags, char *data);
 
-void handleVersion(t_flags *flags, char *data);
+void handle_version(t_flags *flags, char *data);
 
-void handleDeadline(t_flags *flags, char *data);
+void handle_deadline(t_flags *flags, char *data);
 
-void handleHelp();
+void handle_help();
 
 #endif // !FLAGS_H
