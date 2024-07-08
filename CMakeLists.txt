@@ -18,24 +18,4 @@ else()
     target_compile_options(${PROJECT_NAME} PRIVATE ${COMMON_COMPILE_OPTIONS})
 endif()
 
-if(BONUS)
-    target_compile_definitions(${PROJECT_NAME} PRIVATE BONUS=1)
-    message(STATUS "BONUS compilation flag enabled")
-endif()
 
-add_custom_target(bonus
-    COMMAND ${CMAKE_COMMAND} -E env CXXFLAGS=-DBONUS=1 ${CMAKE_COMMAND} --build . --target ${PROJECT_NAME}
-    COMMENT "Building with BONUS flag"
-)
-
-add_custom_target(fclean
-    COMMAND ${CMAKE_COMMAND} --build . --target clean
-    COMMAND ${CMAKE_COMMAND} -E remove ${PROJECT_NAME}
-    COMMENT "Removing all object files and executable"
-)
-
-add_custom_target(re
-    COMMAND ${CMAKE_COMMAND} --build . --target fclean
-    COMMAND ${CMAKE_COMMAND} --build . --target all
-    COMMENT "Rebuilding everything"
-)
