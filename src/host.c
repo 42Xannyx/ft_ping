@@ -24,7 +24,7 @@ const char *fetch_hostname(const char *hostname) {
     exit(EXIT_FAILURE);
   }
 
-  if (result->ai_family != AF_INET) {
+  if (__builtin_expect(result->ai_family != AF_INET, AF_INET)) {
     (void)fprintf(stderr, "IPv6 addresses not handled\n");
     exit(EXIT_FAILURE);
   }
@@ -33,7 +33,7 @@ const char *fetch_hostname(const char *hostname) {
   if (!ip_str) {
     perror("malloc() error");
     freeaddrinfo(result);
-    exit(1);
+    exit(EXIT_FAILURE);
   }
 
   t_sockaddr_in *ipv4 = (t_sockaddr_in *)result->ai_addr;

@@ -75,7 +75,7 @@ t_packet *init_packet() {
 
   if (!packet) {
     perror("malloc() error");
-    exit(1);
+    exit(EXIT_FAILURE);
   }
 
   (void)memset(packet, 0, sizeof(t_packet));
