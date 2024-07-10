@@ -24,7 +24,7 @@ typedef struct stats {
   n_short total_packages;
   n_short received_packages;
 
-  double sum, sumSquared;
+  double sum, sumSquared, ewma;
 
   t_timespec total_rtt, total_time;
   t_timespec min, max, avg, stddev;
@@ -51,10 +51,11 @@ __attribute__((warn_unused_result)) t_sockaddr_in *set_address(const char *);
 
 // message.c
 void message_on_start(const char *, const char *, const ssize_t);
+void message_on_sigquit(const t_stats);
 void verbose_message_on_start(const int32_t, const char *);
 void format_message(const char *, ssize_t, t_timespec, uint16_t ident,
                     bool verbose);
-void message_on_quit(const char *, const t_stats, t_timespec total_time);
+void message_on_quit(const char *, const t_stats);
 
 // host.c
 __attribute__((warn_unused_result)) const char *fetch_hostname(const char *);
@@ -66,6 +67,18 @@ __attribute__((warn_unused_result)) t_timespec set_duration(t_timespec t_start,
                                                             t_timespec t_end);
 
 //******* Functions *******//
+
+__attribute__((warn_unused_result)) static inline double
+timespec_to_ms(t_timespec tv) {
+  return tv.tv_sec * 1000.0 + tv.tv_nsec / 1000000.0;
+}
+
+static inline double weighted_moving_average(double new_value,
+                                             double current_ewma) {
+  double weight = 0.2;
+
+  return weight * new_value + (1 - weight) * current_ewma;
+}
 
 static inline void accumulate(t_timespec *total, t_timespec new) {
   total->tv_sec += new.tv_sec;
@@ -84,11 +97,6 @@ set_time(const int32_t sec, const int32_t nsec) {
   tv.tv_sec = sec;
   tv.tv_nsec = nsec;
   return tv;
-}
-
-__attribute__((warn_unused_result)) static inline double
-timespec_to_ms(t_timespec tv) {
-  return tv.tv_sec * 1000.0 + tv.tv_nsec / 1000000.0;
 }
 
 #endif // FT_PING_H

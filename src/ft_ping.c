@@ -14,12 +14,16 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-volatile sig_atomic_t g_ping_loop = true; // Signal use only!
+volatile sig_atomic_t g_sig_flag = 0; // Signal use only!
 
-void handle_signal(int32_t sig) {
-  (void)sig;
-  g_ping_loop = false;
-}
+/*
+ * From the man:
+ * When the specified number of packets have been sent (and received) or if the
+ * program is terminated with a SIGINT, a brief summary is displayed. Shorter
+ * current statistics can be obtained without termination of process with signal
+ * SIGQUIT.
+ */
+void handle_signal(int32_t sig) { g_sig_flag = sig; }
 
 void update_stats(t_stats *stats, t_timespec new) {
   double newMs = timespec_to_ms(new);
@@ -38,6 +42,8 @@ void update_stats(t_stats *stats, t_timespec new) {
 
   stats->stddev.tv_sec = stddevMs / 1000;
   stats->stddev.tv_nsec = (uint64_t)(stddevMs * 1000000) % 1000000000;
+
+  stats->ewma = weighted_moving_average(newMs, stats->ewma);
 }
 
 int32_t main(int32_t argc, char *argv[]) {
@@ -53,6 +59,7 @@ int32_t main(int32_t argc, char *argv[]) {
   }
 
   (void)signal(SIGINT, handle_signal);
+  (void)signal(SIGQUIT, handle_signal);
 
   t_stats stats;
   t_timespec time = {0, 0}, t_start = {0, 0}, t_end = {0, 0};
@@ -79,8 +86,15 @@ int32_t main(int32_t argc, char *argv[]) {
   }
   message_on_start(ip_str, ip, sizeof(packet->payload));
 
-  while (g_ping_loop) {
+  while (true) {
     char buf[84]; // ICMP Payload (64 Bytes) + IP Header (20 Bytes)
+
+    if (g_sig_flag == SIGQUIT) {
+      g_sig_flag = 0;
+      message_on_sigquit(stats);
+    } else if (g_sig_flag == SIGINT) {
+      break;
+    }
 
     ssize_t ret = send_ping(socket_fd, *address, packet, sizeof(*packet));
     get_clock(&t_start);
@@ -125,12 +139,13 @@ int32_t main(int32_t argc, char *argv[]) {
         break;
       }
     }
+
+    stats.total_packages = packet->header.icmp_hun.ih_idseq.icd_seq;
   }
 
-  stats.total_packages = packet->header.icmp_hun.ih_idseq.icd_seq;
   calculate_average(&stats);
 
-  message_on_quit(ip, stats, time);
+  message_on_quit(ip, stats);
   (void)close(socket_fd);
   free(packet);
   free((char *)ip_str);

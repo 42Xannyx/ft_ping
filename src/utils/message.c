@@ -65,22 +65,40 @@ void message_on_start(const char *ip_str, const char *input,
   (void)printf("FT_PING %s (%s): %zu data bytes\n", input, ip_str, numBytes);
 }
 
-void message_on_quit(const char *input, const t_stats stats,
-                     t_timespec total_time) {
+void message_on_sigquit(const t_stats stats) {
   double minMs = timespec_to_ms(stats.min);
   double avgMs = timespec_to_ms(stats.avg);
   double maxMs = timespec_to_ms(stats.max);
-  double stddevMs = timespec_to_ms(stats.stddev);
-  double total = timespec_to_ms(total_time) * 1000;
-
-  (void)printf("--- %s ping statistics ---\n", input);
-  (void)printf("%hu packets transmitted, ", stats.total_packages);
-  (void)printf("%hu packets received, ", stats.received_packages);
+  double ewmaMs = stats.ewma;
   double packet_loss =
       stats.total_packages > 0
           ? 100.0 * (stats.total_packages - stats.received_packages) /
                 stats.total_packages
           : 0.0;
+
+  if (avgMs && ewmaMs) {
+    printf("%hu/%hu packets, %.1f loss, min/avg/ewma/max = %.3f/%.3f/"
+           "%.3f/%.3f ms\n",
+           stats.received_packages, stats.total_packages, packet_loss, minMs,
+           avgMs, ewmaMs, maxMs);
+  }
+}
+
+void message_on_quit(const char *input, const t_stats stats) {
+  double minMs = timespec_to_ms(stats.min);
+  double avgMs = timespec_to_ms(stats.avg);
+  double maxMs = timespec_to_ms(stats.max);
+  double stddevMs = timespec_to_ms(stats.stddev);
+  double total = timespec_to_ms(stats.total_time) * 1000;
+  double packet_loss =
+      stats.total_packages > 0
+          ? 100.0 * (stats.total_packages - stats.received_packages) /
+                stats.total_packages
+          : 0.0;
+
+  (void)printf("--- %s ping statistics ---\n", input);
+  (void)printf("%hu packets transmitted, ", stats.total_packages);
+  (void)printf("%hu packets received, ", stats.received_packages);
   (void)printf("%.1f%% packet loss, ", packet_loss);
   (void)printf("%ldms time\n", (long)total);
 
