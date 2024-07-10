@@ -86,9 +86,8 @@ int32_t main(int32_t argc, char *argv[]) {
 
   t_packet *packet = init_packet();
 
-  if (flags->verbose && argv[argc - 1]) {
-    (void)printf("ai->ai_family: AF_INET, ai->ai_canonname: '%s'\n",
-                 argv[argc - 1]);
+  if (flags->verbose && ip) {
+    (void)printf("ai->ai_family: AF_INET, ai->ai_canonname: '%s'\n", ip);
   }
   message_on_start(ip_str, ip, sizeof(packet->payload));
 

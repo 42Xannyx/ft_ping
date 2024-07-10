@@ -33,7 +33,7 @@ t_flags *init_flags(int32_t argc, char *argv[]) {
 
   (void)memset(flags, false, sizeof(t_flags));
 
-  for (int32_t i = 1; i < argc; i++) {
+  for (int32_t i = 1; i < argc - 1; i++) {
     find_flag(flags, argv[i], argv[i + 1]);
   }
 
