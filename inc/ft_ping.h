@@ -52,7 +52,7 @@ __attribute__((warn_unused_result)) t_sockaddr_in *set_address(const char *);
 // message.c
 void message_on_start(const char *, const char *, const ssize_t);
 void message_on_sigquit(const t_stats);
-void verbose_message_on_start(const int32_t, const char *);
+void verbose_message_on_start(const int32_t);
 void format_message(const char *, ssize_t, t_timespec, uint16_t ident,
                     bool verbose);
 void message_on_quit(const char *, const t_stats);

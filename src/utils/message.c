@@ -53,11 +53,10 @@ void format_message(const char *buf, ssize_t numBytes, t_timespec tv,
                microseconds);
 }
 
-void verbose_message_on_start(const int32_t socket_fd, const char *canonname) {
+void verbose_message_on_start(const int32_t socket_fd) {
   (void)printf("ft_ping: sock4.fd: %d (socktype: SOCK_RAW), hints.ai_family: "
                "AF_INET\n\n",
                socket_fd);
-  (void)printf("ai->ai_family: AF_INET, ai->ai_canonname: '%s'\n", canonname);
 }
 
 void message_on_start(const char *ip_str, const char *input,

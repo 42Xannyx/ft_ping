@@ -69,7 +69,12 @@ int32_t main(int32_t argc, char *argv[]) {
   (void)memset(&stats, 0, sizeof(t_stats));
 
   const int32_t socket_fd = create_socket();
+
   set_socket(socket_fd);
+  if (flags->verbose) {
+    verbose_message_on_start(socket_fd);
+  }
+
   const char *ip_str = fetch_hostname(ip);
 
   const t_sockaddr_in *address = set_address(ip_str);
@@ -81,8 +86,9 @@ int32_t main(int32_t argc, char *argv[]) {
 
   t_packet *packet = init_packet();
 
-  if (flags->verbose) {
-    verbose_message_on_start(socket_fd, argv[argc - 1]);
+  if (flags->verbose && argv[argc - 1]) {
+    (void)printf("ai->ai_family: AF_INET, ai->ai_canonname: '%s'\n",
+                 argv[argc - 1]);
   }
   message_on_start(ip_str, ip, sizeof(packet->payload));
 

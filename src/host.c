@@ -19,7 +19,7 @@ const char *fetch_hostname(const char *hostname) {
   hints.ai_canonname = (char *)hostname;
 
   int32_t ret = getaddrinfo(hostname, NULL, &hints, &result);
-  if (__builtin_expect(ret > 0, 0)) {
+  if (__builtin_expect(ret < 0, 0)) {
     (void)fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(ret));
     exit(EXIT_FAILURE);
   }
