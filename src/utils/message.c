@@ -2,6 +2,7 @@
 #include <netinet/ip_icmp.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <unistd.h>
 
 #include "ft_ping.h"
 
@@ -28,29 +29,36 @@ void format_message(const char *buf, ssize_t numBytes, t_timespec tv,
                     uint16_t ident, bool verbose) {
   struct ip *ip = (struct ip *)buf;
   u_int32_t ip_header_len = ip->ip_hl * 4;
-
   struct icmp *recv_icmp = (struct icmp *)(buf + ip_header_len);
   ssize_t icmp_payload_len = numBytes - ip_header_len;
-
   int64_t milliseconds = tv.tv_nsec / 1000000;
   int64_t microseconds = (tv.tv_nsec % 1000000) / 1000;
 
   if (recv_icmp->icmp_type != ICMP_ECHOREPLY) {
     return;
   }
+
+  char message[256];
+  int len;
+
   if (verbose) {
-    (void)printf(
+    len = snprintf(
+        message, sizeof(message),
         "%zd bytes from %s: icmp_seq=%u ident=%d ttl=%d time=%ld.%03ld ms\n",
         icmp_payload_len, inet_ntoa(ip->ip_src),
         recv_icmp->icmp_hun.ih_idseq.icd_seq, ident, ip->ip_ttl, milliseconds,
         microseconds);
-
-    return;
+  } else {
+    len = snprintf(message, sizeof(message),
+                   "%zd bytes from %s: icmp_seq=%u ttl=%d time=%ld.%03ld ms\n",
+                   icmp_payload_len, inet_ntoa(ip->ip_src),
+                   recv_icmp->icmp_hun.ih_idseq.icd_seq, ip->ip_ttl,
+                   milliseconds, microseconds);
   }
-  (void)printf("%zd bytes from %s: icmp_seq=%u ttl=%d time=%ld.%03ld ms\n",
-               icmp_payload_len, inet_ntoa(ip->ip_src),
-               recv_icmp->icmp_hun.ih_idseq.icd_seq, ip->ip_ttl, milliseconds,
-               microseconds);
+
+  if (len > 0 && len < (int)sizeof(message)) {
+    write(STDOUT_FILENO, message, len);
+  }
 }
 
 void verbose_message_on_start(const int32_t socket_fd) {
@@ -88,7 +96,7 @@ void message_on_quit(const char *input, const t_stats stats) {
   double avgMs = timespec_to_ms(stats.avg);
   double maxMs = timespec_to_ms(stats.max);
   double stddevMs = timespec_to_ms(stats.stddev);
-  double total = timespec_to_ms(stats.total_time) * 1000;
+  double total = timespec_to_ms(stats.total_time);
   double packet_loss =
       stats.total_packages > 0
           ? 100.0 * (stats.total_packages - stats.received_packages) /
