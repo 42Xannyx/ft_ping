@@ -14,6 +14,38 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+int compare_timespec(const struct timespec *a, const struct timespec *b) {
+  if (a->tv_sec < b->tv_sec)
+    return -1;
+  if (a->tv_sec > b->tv_sec)
+    return 1;
+  if (a->tv_nsec < b->tv_nsec)
+    return -1;
+  if (a->tv_nsec > b->tv_nsec)
+    return 1;
+  return 0;
+}
+
+void add_timespec(struct timespec *result, struct timespec *a,
+                  struct timespec *b) {
+  result->tv_sec = a->tv_sec + b->tv_sec;
+  result->tv_nsec = a->tv_nsec + b->tv_nsec;
+  if (result->tv_nsec >= 1000000000) {
+    result->tv_sec++;
+    result->tv_nsec -= 1000000000;
+  }
+}
+
+void subtract_timespec(struct timespec *result, struct timespec *a,
+                       struct timespec *b) {
+  result->tv_sec = a->tv_sec - b->tv_sec;
+  result->tv_nsec = a->tv_nsec - b->tv_nsec;
+  if (result->tv_nsec < 0) {
+    result->tv_sec--;
+    result->tv_nsec += 1000000000;
+  }
+}
+
 volatile sig_atomic_t g_sig_flag = 0; // Signal use only!
 
 /*
@@ -62,7 +94,6 @@ int32_t main(int32_t argc, char *argv[]) {
   (void)signal(SIGQUIT, handle_signal);
 
   t_stats stats;
-  t_timespec time = {0, 0}, t_start = {0, 0}, t_end = {0, 0};
   t_flags *flags = init_flags(argc, argv);
   const char *ip = argv[argc - 1];
 
@@ -91,9 +122,13 @@ int32_t main(int32_t argc, char *argv[]) {
   }
   message_on_start(ip_str, ip, sizeof(packet->payload));
 
+  struct timespec ping_interval = {1, 0}; // 1 second
+  struct timespec next_ping_time;
+
+  clock_gettime(CLOCK_MONOTONIC, &next_ping_time);
+
   while (true) {
     char buf[84]; // ICMP Payload (64 Bytes) + IP Header (20 Bytes)
-
     if (g_sig_flag == SIGQUIT) {
       g_sig_flag = 0;
       message_on_sigquit(stats);
@@ -101,47 +136,54 @@ int32_t main(int32_t argc, char *argv[]) {
       break;
     }
 
+    struct timespec send_time, recv_time;
+    clock_gettime(CLOCK_MONOTONIC, &send_time);
     ssize_t ret = send_ping(socket_fd, *address, packet, sizeof(*packet));
-    get_clock(&t_start);
-
     ret = recv_ping(buf, sizeof(buf), socket_fd, *address);
-    get_clock(&t_end);
+    clock_gettime(CLOCK_MONOTONIC, &recv_time);
 
     if (ret < 0) {
       (void)fprintf(stderr, "request timeout for icmp_req=%d\n",
                     packet->header.icmp_hun.ih_idseq.icd_seq);
-    }
-
-    if (ret >= 0) {
-      time = set_duration(t_start, t_end);
+    } else {
+      struct timespec time;
+      subtract_timespec(&time, &recv_time, &send_time);
       uint16_t ident = packet->header.icmp_hun.ih_idseq.icd_id;
 
       if (packet->header.icmp_hun.ih_idseq.icd_seq == 0) {
         stats.min = time;
       }
-
-      if (stats.max.tv_sec + stats.max.tv_nsec < time.tv_sec + time.tv_nsec) {
+      if (compare_timespec(&stats.max, &time) < 0) {
         stats.max = time;
       }
-      if (stats.min.tv_sec + stats.min.tv_nsec > time.tv_sec + time.tv_nsec) {
+      if (compare_timespec(&stats.min, &time) > 0) {
         stats.min = time;
       }
-
       accumulate(&stats.total_rtt, time);
       update_stats(&stats, time);
-
       format_message(buf, ret, time, ident, flags->verbose);
-
-      (void)usleep(PING_SLEEP_RATE);
     }
 
     change_packet(packet);
-
     stats.total_packages = packet->header.icmp_hun.ih_idseq.icd_seq;
+
+    // Calculate time for next ping
+    add_timespec(&next_ping_time, &next_ping_time, &ping_interval);
+
+    // Sleep until next ping time
+    struct timespec now, sleep_time;
+    clock_gettime(CLOCK_MONOTONIC, &now);
+    subtract_timespec(&sleep_time, &next_ping_time, &now);
+
+    if (sleep_time.tv_sec >= 0 && sleep_time.tv_nsec >= 0) {
+      nanosleep(&sleep_time, NULL);
+    } else {
+      // We're behind schedule, send next ping immediately
+      clock_gettime(CLOCK_MONOTONIC, &next_ping_time);
+    }
 
     if (BONUS && flags->deadline == true) {
       flags->amount_deadline--;
-
       if (flags->deadline && flags->amount_deadline <= 0) {
         break;
       }

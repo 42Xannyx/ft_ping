@@ -10,7 +10,7 @@
 #include <stdint.h>
 #include <time.h>
 
-#define PING_SLEEP_RATE 1000000 // 1 second
+#define PING_SLEEP_RATE 1000000000 // 1 second
 
 #ifndef BONUS
 #define BONUS 0
