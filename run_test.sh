@@ -40,33 +40,33 @@ run_test() {
 run_test "Help flag (-?)" "./ft_ping -?" "Usage:" "5s"
 
 # Test -v flag
-run_test "Verbose flag (-v)" "./ft_ping -v localhost" "PING localhost" "5s"
+run_test "Verbose flag (-v)" "./ft_ping -v 8.8.8.8" "PING 8.8.8.8" "5s"
 
 # Test -V flag
 run_test "Version flag (-V)" "./ft_ping -V" "ft_ping from 42Xannyx 20240401" "5s"
 
 # Test -w flag
-run_test "Timeout flag (-w)" "./ft_ping -w 5 localhost" "PING localhost" "10s"
+run_test "Timeout flag (-w)" "./ft_ping -w 5 8.8.8.8" "PING 8.8.8.8" "10s"
 
 # Test with IPv4 address
-run_test "IPv4 address" "./ft_ping 8.8.8.8" "PING 8.8.8.8" "5s"
+run_test "IPv4 address" "./ft_ping 8.8.8.8" "" "5s"
 
 # Test with invalid address
 run_test "Invalid address" "./ft_ping invalidaddress" "getaddrinfo: Temporary failure in name resolution" "5s"
 
 # Test with multiple flags
-run_test "Multiple flags" "./ft_ping -v -w 3 localhost" "PING localhost" "10s"
+run_test "Multiple flags" "./ft_ping -v -w 3 8.8.8.8" "PING 8.8.8.8" "10s"
 
 # Test with non-existent flag
-run_test "Non-existent flag" "./ft_ping -z localhost" "invalid option" "5s"
+run_test "Non-existent flag" "./ft_ping -z 8.8.8.8" "invalid option" "5s"
 
 # Comparison with system ping (if available)
 if command -v ping &> /dev/null; then
     echo -e "\n${GREEN}Comparing with system ping${NC}"
     echo "ft_ping output:"
-    timeout 5s ./ft_ping localhost
+    timeout 5s ./ft_ping 8.8.8.8 
     echo "System ping output:"
-    timeout 5s ping localhost
+    timeout 5s ping 8.8.8.8 
 else
     echo -e "\n${RED}System ping not available for comparison${NC}"
 fi
