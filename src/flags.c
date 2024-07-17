@@ -18,7 +18,7 @@ static void find_flag(t_flags *flags, char *flag, char *data) {
       handle_verbose(flags, data);
     }
 
-    if (BONUS && strcmp(flag, flag_mappings[i].flag) == 0) {
+    if (strcmp(flag, flag_mappings[i].flag) == 0) {
       flag_mappings[i].handler(flags, data);
     }
   }
@@ -33,7 +33,7 @@ t_flags *init_flags(int32_t argc, char *argv[]) {
 
   (void)memset(flags, false, sizeof(t_flags));
 
-  for (int32_t i = 1; i < argc - 1; i++) {
+  for (int32_t i = 1; i < argc; i++) {
     find_flag(flags, argv[i], argv[i + 1]);
   }
 

@@ -23,6 +23,9 @@ $(NAME): $(OBJS)
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 	@echo "$(NAME) compiled successfully"
 
+bonus: CFLAGS += -DBONUS=1
+bonus: all
+
 clean:
 	rm -rf $(OBJ_DIR)
 	@echo "Object files cleaned"
@@ -38,4 +41,4 @@ debug: LDFLAGS += -fsanitize=address
 debug: all
 
 
-.PHONY: all clean fclean re install debug
+.PHONY: all clean fclean re install debug bonus

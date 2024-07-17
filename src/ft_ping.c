@@ -71,9 +71,6 @@ int32_t main(int32_t argc, char *argv[]) {
   const int32_t socket_fd = create_socket();
 
   set_socket(socket_fd);
-  if (flags->verbose) {
-    verbose_message_on_start(socket_fd);
-  }
 
   const char *ip_str = fetch_hostname(ip);
 
@@ -84,6 +81,9 @@ int32_t main(int32_t argc, char *argv[]) {
     return (EXIT_FAILURE);
   }
 
+  if (flags->verbose) {
+    verbose_message_on_start(socket_fd);
+  }
   t_packet *packet = init_packet();
 
   if (flags->verbose && ip) {
@@ -137,6 +137,8 @@ int32_t main(int32_t argc, char *argv[]) {
 
     change_packet(packet);
 
+    stats.total_packages = packet->header.icmp_hun.ih_idseq.icd_seq;
+
     if (BONUS && flags->deadline == true) {
       flags->amount_deadline--;
 
@@ -144,8 +146,6 @@ int32_t main(int32_t argc, char *argv[]) {
         break;
       }
     }
-
-    stats.total_packages = packet->header.icmp_hun.ih_idseq.icd_seq;
   }
 
   calculate_average(&stats);
